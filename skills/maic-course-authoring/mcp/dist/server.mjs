@@ -12572,10 +12572,37 @@ function cliTools() {
 		console.log(`      ${tool.description.split("\n")[0]}\n`);
 	}
 }
+function cliValidate(manifestPath) {
+	if (!manifestPath) {
+		console.error("用法：node server.mjs --validate <manifest.json>");
+		process.exitCode = 1;
+		return;
+	}
+	let manifest;
+	try {
+		manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+	} catch (error) {
+		console.error(`❌ 读取失败：${error.message}`);
+		process.exitCode = 1;
+		return;
+	}
+	const result = validateManifest(manifest);
+	console.log(`校验器：${result.validator === "schema" ? "上游 JSON Schema（权威）" : "@openmaic/dsl 结构子集（已降级）"} · 契约 ${result.dslVersion}`);
+	formatIssues("错误", result.errors);
+	formatIssues("警告", result.warnings);
+	if (result.errors.length > 0) {
+		process.exitCode = 1;
+		return;
+	}
+	console.log("\n✅ 结构校验通过。");
+}
 const [command, ...rest] = process.argv.slice(2);
 switch (command) {
 	case "--check":
 		cliCheck(rest[0]);
+		break;
+	case "--validate":
+		cliValidate(rest[0]);
 		break;
 	case "--pack":
 		cliPack(rest[0], rest[1]);
@@ -12595,6 +12622,7 @@ switch (command) {
 			"",
 			"  node server.mjs                            MCP stdio 模式",
 			"  node server.mjs --check <x.maic.zip>       校验已打包的 zip",
+			"  node server.mjs --validate <manifest.json> 校验草稿 manifest",
 			"  node server.mjs --pack <m.json> <out.zip>  从 manifest 打包",
 			"  node server.mjs --tools                    列出工具",
 			"",

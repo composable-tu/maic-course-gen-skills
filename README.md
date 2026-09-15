@@ -92,7 +92,10 @@ maic-course-gen-skills/
 │       │       └── INDEX.md       本仓库新增：要做什么 → 读哪个技能
 │       ├── mcp/                   MCP server（TS 源码 + 单文件构建产物）
 │       └── examples/
-│           └── minimal-course/    可复制的两页示例（已通过校验）
+│           ├── README.md          三个示例的索引与覆盖点说明
+│           ├── minimal-course/    2 页最小骨架
+│           ├── element-cookbook/  十种画布元素逐个样例
+│           └── full-course/       完整课程（互动 + 白板 + 双智能体）
 ├── scripts/
 │   └── apply-license-headers.mjs  许可头注入（幂等）
 ├── LICENSE                        本仓库许可（MIT）

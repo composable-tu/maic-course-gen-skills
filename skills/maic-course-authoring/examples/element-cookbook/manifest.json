@@ -1,0 +1,408 @@
+{
+  "formatVersion": 1,
+  "exportedAt": "2026-09-15T00:00:00.000Z",
+  "stage": {
+    "name": "元素样册：十种画布元素",
+    "description": "每种幻灯片元素类型一个真实样例，供编写时对照。",
+    "createdAt": 1757894400000,
+    "updatedAt": 1757894400000
+  },
+  "agents": [
+    {
+      "name": "张老师",
+      "role": "teacher",
+      "persona": "严谨，喜欢用具体数字说明问题。",
+      "avatar": "teacher-1",
+      "color": "#4F8EF7",
+      "priority": 1
+    }
+  ],
+  "scenes": [
+    {
+      "type": "slide",
+      "title": "文本元素：字号层级与多行写法",
+      "order": 1,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-text",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#4F8EF7", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_title",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 76,
+              "rotate": 0,
+              "content": "<p style=\"font-size:36px;\"><strong>水的三相点与常见温度点</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "text_subtitle",
+              "type": "text",
+              "left": 60,
+              "top": 150,
+              "width": 880,
+              "height": 58,
+              "rotate": 0,
+              "content": "<p style=\"font-size:24px;\">三相点、冰点与沸点——三个容易混淆的温度</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "text_body",
+              "type": "text",
+              "left": 60,
+              "top": 240,
+              "width": 880,
+              "height": 170,
+              "rotate": 0,
+              "content": "<p style=\"font-size:18px;\">• 三相点：273.16 K，压力 611.657 Pa</p><p style=\"font-size:18px;\">• 冰点：273.15 K，标准大气压下</p><p style=\"font-size:18px;\">• 沸点：373.13 K，标准大气压下</p><p style=\"font-size:18px;\">• 三者相差虽小，物理意义完全不同</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "text_caption",
+              "type": "text",
+              "left": 60,
+              "top": 440,
+              "width": 880,
+              "height": 43,
+              "rotate": 0,
+              "content": "<p style=\"font-size:14px;\">数据来源：材料《水的三相点》</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#888888"
+            }
+          ]
+        }
+      },
+      "actions": [
+        { "id": "a1", "type": "speech", "text": "这一页只用了文本元素。注意字号层级：36、24、18、14。" },
+        { "id": "a2", "type": "spotlight", "elementId": "text_body" }
+      ]
+    },
+    {
+      "type": "slide",
+      "title": "形状与线条：path/viewBox 与起点终点",
+      "order": 2,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-shape",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#0F6E56", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_head",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>形状与线条</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "shape_divider",
+              "type": "shape",
+              "left": 60,
+              "top": 200,
+              "width": 880,
+              "height": 3,
+              "rotate": 0,
+              "viewBox": [1000, 1000],
+              "path": "M 0 0 L 1000 0 L 1000 1000 L 0 1000 Z",
+              "fill": "#CCCCCC",
+              "fixedRatio": false
+            },
+            {
+              "id": "shape_block",
+              "type": "shape",
+              "left": 60,
+              "top": 240,
+              "width": 880,
+              "height": 120,
+              "rotate": 0,
+              "viewBox": [1000, 1000],
+              "path": "M 0 0 L 1000 0 L 1000 1000 L 0 1000 Z",
+              "fill": "#E1F5EE",
+              "fixedRatio": false
+            },
+            {
+              "id": "text_block_body",
+              "type": "text",
+              "left": 80,
+              "top": 258,
+              "width": 840,
+              "height": 85,
+              "rotate": 0,
+              "content": "<p style=\"font-size:18px;\">形状元素用 viewBox + path 描述轮廓，fill 上色。</p><p style=\"font-size:18px;\">path 坐标是相对 viewBox 的，缩放由 left/top/width/height 完成。</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#0F6E56"
+            },
+            {
+              "id": "line_arrow",
+              "type": "line",
+              "left": 100,
+              "top": 430,
+              "width": 300,
+              "start": [0, 0],
+              "end": [300, 0],
+              "points": ["", "arrow"],
+              "style": "solid",
+              "color": "#333333"
+            },
+            {
+              "id": "text_line_note",
+              "type": "text",
+              "left": 430,
+              "top": 415,
+              "width": 500,
+              "height": 49,
+              "rotate": 0,
+              "content": "<p style=\"font-size:16px;\">线条元素没有 height 和 rotate 字段，由 start/end 决定走向。</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#555555"
+            }
+          ]
+        }
+      },
+      "actions": [{ "id": "a1", "type": "speech", "text": "形状用 path 画轮廓，线条用 start 和 end 定方向。" }]
+    },
+    {
+      "type": "slide",
+      "title": "图表与表格：数据驱动的两类元素",
+      "order": 3,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-data",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#4F8EF7", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_head",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>饱和蒸气压随温度的变化</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "chart_vapor",
+              "type": "chart",
+              "left": 60,
+              "top": 140,
+              "width": 420,
+              "height": 330,
+              "rotate": 0,
+              "chartType": "bar",
+              "data": {
+                "labels": ["0 °C", "25 °C", "50 °C", "75 °C", "100 °C"],
+                "legends": ["饱和蒸气压 (kPa)"],
+                "series": [[0.61, 3.17, 12.35, 38.56, 101.32]]
+              },
+              "themeColors": ["#4F8EF7"]
+            },
+            {
+              "id": "table_compare",
+              "type": "table",
+              "left": 520,
+              "top": 140,
+              "width": 420,
+              "height": 240,
+              "rotate": 0,
+              "outline": { "color": "#DDDDDD", "width": 1, "style": "solid" },
+              "colWidths": [140, 140, 140],
+              "cellMinHeight": 36,
+              "data": [
+                [
+                  { "id": "c00", "colspan": 1, "rowspan": 1, "text": "温度点" },
+                  { "id": "c01", "colspan": 1, "rowspan": 1, "text": "温度" },
+                  { "id": "c02", "colspan": 1, "rowspan": 1, "text": "压力" }
+                ],
+                [
+                  { "id": "c10", "colspan": 1, "rowspan": 1, "text": "三相点" },
+                  { "id": "c11", "colspan": 1, "rowspan": 1, "text": "273.16 K" },
+                  { "id": "c12", "colspan": 1, "rowspan": 1, "text": "611.657 Pa" }
+                ],
+                [
+                  { "id": "c20", "colspan": 1, "rowspan": 1, "text": "冰点" },
+                  { "id": "c21", "colspan": 1, "rowspan": 1, "text": "273.15 K" },
+                  { "id": "c22", "colspan": 1, "rowspan": 1, "text": "101.325 kPa" }
+                ],
+                [
+                  { "id": "c30", "colspan": 1, "rowspan": 1, "text": "沸点" },
+                  { "id": "c31", "colspan": 1, "rowspan": 1, "text": "373.13 K" },
+                  { "id": "c32", "colspan": 1, "rowspan": 1, "text": "101.325 kPa" }
+                ]
+              ]
+            }
+          ]
+        }
+      },
+      "actions": [
+        { "id": "a1", "type": "speech", "text": "图表的 data 是 labels、legends、series 三件套；表格的每个单元格都要有 id、colspan、rowspan 和 text。" }
+      ]
+    },
+    {
+      "type": "slide",
+      "title": "公式与代码",
+      "order": 4,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-formula",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#534AB7", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_head",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>用公式与代码表达定量关系</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "latex_clausius",
+              "type": "latex",
+              "left": 60,
+              "top": 140,
+              "width": 880,
+              "height": 90,
+              "rotate": 0,
+              "latex": "\\ln\\dfrac{P_2}{P_1} = -\\dfrac{\\Delta H_{\\text{vap}}}{R}\\left(\\dfrac{1}{T_2} - \\dfrac{1}{T_1}\\right)"
+            },
+            {
+              "id": "code_antoine",
+              "type": "code",
+              "left": 60,
+              "top": 260,
+              "width": 880,
+              "height": 200,
+              "rotate": 0,
+              "language": "python",
+              "lines": [
+                { "id": "L1", "content": "# Antoine 方程：由温度计算饱和蒸气压（kPa）" },
+                { "id": "L2", "content": "def antoine(a, b, c, t_celsius):" },
+                { "id": "L3", "content": "    return 10 ** (a - b / (t_celsius + c))" },
+                { "id": "L4", "content": "" },
+                { "id": "L5", "content": "print(antoine(8.07131, 1730.63, 233.426, 25))" }
+              ]
+            }
+          ]
+        }
+      },
+      "actions": [{ "id": "a1", "type": "speech", "text": "同一个定量关系，公式给推导，代码给可运行的实现。" }]
+    },
+    {
+      "type": "slide",
+      "title": "媒体元素：图片、视频、音频",
+      "order": 5,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-media",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#D85A30", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_head",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>三种媒体元素</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "img_diagram",
+              "type": "image",
+              "left": 60,
+              "top": 150,
+              "width": 400,
+              "height": 300,
+              "rotate": 0,
+              "fixedRatio": false,
+              "src": "https://placehold.co/400x300/png?text=phase+diagram"
+            },
+            {
+              "id": "video_demo",
+              "type": "video",
+              "left": 500,
+              "top": 150,
+              "width": 440,
+              "height": 260,
+              "rotate": 0,
+              "autoplay": false,
+              "src": "https://www.w3schools.com/html/mov_bbb.mp4"
+            },
+            {
+              "id": "audio_narration",
+              "type": "audio",
+              "left": 500,
+              "top": 440,
+              "width": 440,
+              "height": 60,
+              "rotate": 0,
+              "fixedRatio": false,
+              "color": "#4F8EF7",
+              "loop": false,
+              "autoplay": false,
+              "src": "https://www.w3schools.com/html/horse.ogg"
+            }
+          ]
+        }
+      },
+      "actions": [{ "id": "a1", "type": "speech", "text": "图片、视频、音频都可以直接用外部地址，不进 mediaIndex。" }]
+    }
+  ]
+}

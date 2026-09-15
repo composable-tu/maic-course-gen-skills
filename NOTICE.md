@@ -93,7 +93,10 @@ skills/
 │   │   ├── tsdown.config.ts
 │   │   └── tsconfig.json
 │   └── examples/
-│       └── minimal-course/manifest.json
+│       ├── README.md
+│       ├── minimal-course/manifest.json
+│       ├── element-cookbook/manifest.json
+│       └── full-course/manifest.json
 scripts/
 └── apply-license-headers.mjs
 ```

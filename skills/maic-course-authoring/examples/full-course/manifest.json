@@ -1,0 +1,269 @@
+{
+  "formatVersion": 1,
+  "exportedAt": "2026-09-15T00:00:00.000Z",
+  "stage": {
+    "name": "完整课程：水的三相点",
+    "description": "四类场景（slide / quiz / interactive）+ 讲解与白板动作 + 双智能体 + 媒体索引，覆盖 .maic.zip 的主要能力。",
+    "language": "zh-CN",
+    "style": "clean",
+    "createdAt": 1757894400000,
+    "updatedAt": 1757894400000
+  },
+  "agents": [
+    {
+      "name": "张老师",
+      "role": "teacher",
+      "persona": "严谨，喜欢用具体数字说明问题，会主动请学生复述关键数值。",
+      "avatar": "teacher-1",
+      "color": "#4F8EF7",
+      "priority": 1
+    },
+    {
+      "name": "小林",
+      "role": "student",
+      "persona": "爱提问，常把三相点和冰点搞混，需要被纠正。",
+      "avatar": "student-1",
+      "color": "#FFB347",
+      "priority": 2
+    }
+  ],
+  "scenes": [
+    {
+      "type": "slide",
+      "title": "什么是三相点",
+      "order": 1,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-1",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#4F8EF7", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_title",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>水的三相点</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "text_definition",
+              "type": "text",
+              "left": 60,
+              "top": 170,
+              "width": 880,
+              "height": 130,
+              "rotate": 0,
+              "content": "<p style=\"font-size:18px;\">• 气、液、固三态共存的唯一温度和压力组合</p><p style=\"font-size:18px;\">• 温度 273.16 K（0.01 °C）</p><p style=\"font-size:18px;\">• 压力 611.657 Pa</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "shape_divider",
+              "type": "shape",
+              "left": 60,
+              "top": 330,
+              "width": 880,
+              "height": 3,
+              "rotate": 0,
+              "viewBox": [1000, 1000],
+              "path": "M 0 0 L 1000 0 L 1000 1000 L 0 1000 Z",
+              "fill": "#CCCCCC",
+              "fixedRatio": false
+            },
+            {
+              "id": "text_history",
+              "type": "text",
+              "left": 60,
+              "top": 360,
+              "width": 880,
+              "height": 106,
+              "rotate": 0,
+              "content": "<p style=\"font-size:18px;\">1967 年国际计量大会用它定义开尔文；</p><p style=\"font-size:18px;\">2019 年 SI 修订后改由玻尔兹曼常数定义，三相点转为重要固定点。</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            }
+          ]
+        }
+      },
+      "actions": [
+        { "id": "a1", "type": "speech", "text": "我们先看三相点的定义：气、液、固三态共存的唯一温度和压力组合。", "audioRef": "audio/audio-1.mp3" },
+        { "id": "a2", "type": "spotlight", "elementId": "text_definition" },
+        { "id": "a3", "type": "speech", "text": "温度是 273.16 K，压力是 611.657 Pa。" },
+        {
+          "id": "a4",
+          "type": "discussion",
+          "topic": "小林，三相点和冰点一样吗？说说你的理解。",
+          "agentIndex": 1
+        }
+      ]
+    },
+    {
+      "type": "quiz",
+      "title": "小测：三相点的温度",
+      "order": 2,
+      "content": {
+        "type": "quiz",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "question": "水的三相点温度是多少？",
+            "options": [
+              { "label": "273.16 K", "value": "A" },
+              { "label": "273.15 K", "value": "B" },
+              { "label": "373.13 K", "value": "C" }
+            ],
+            "answer": ["A"],
+            "analysis": "三相点是 273.16 K；273.15 K 是标准大气压下的冰点，两者相差 0.01 K。",
+            "hasAnswer": true,
+            "points": 1
+          },
+          {
+            "id": "q2",
+            "type": "short_answer",
+            "question": "为什么 2019 年 SI 修订后，三相点不再用于定义开尔文？请用一两句话说明。",
+            "analysis": "修订后开尔文由玻尔兹曼常数的固定数值定义，不再依赖任何物质的性质；三相点仍是重要的固定点。",
+            "hasAnswer": false,
+            "points": 2
+          }
+        ]
+      },
+      "actions": [{ "id": "a1", "type": "speech", "text": "来做两道题，检查一下刚才的要点。" }]
+    },
+    {
+      "type": "interactive",
+      "title": "互动：调节压力观察相变",
+      "order": 3,
+      "content": {
+        "type": "interactive",
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:system-ui;margin:24px;background:#fff;color:#333}input[type=range]{width:100%}#state{margin-top:16px;padding:12px;border-radius:8px;background:#eef4fb}</style></head><body><h3>调节压力，观察水的相态（温度固定在 0.01 °C）</h3><input id=\"p\" type=\"range\" min=\"100\" max=\"2000\" value=\"611\" step=\"1\"><p>压力：<b id=\"pv\">611</b> Pa</p><div id=\"state\">—</div><script>const P_TRIPLE=611.657;const p=document.getElementById('p'),pv=document.getElementById('pv'),st=document.getElementById('state');function upd(){const v=+p.value;pv.textContent=v;st.textContent=v<P_TRIPLE?'气态（低于三相点压力，液态不存在）':'气液固三相共存或液态（达到/超过三相点压力）';}p.addEventListener('input',upd);upd();</script></body></html>",
+        "widgetType": "simulation",
+        "widgetConfig": {
+          "type": "simulation",
+          "conceptName": "压力低于三相点压力时液态不存在",
+          "variables": {
+            "pressure": { "min": 100, "max": 2000, "default": 611, "step": 1 }
+          }
+        }
+      },
+      "actions": [{ "id": "a1", "type": "speech", "text": "拖动滑块改变压力，看看液态在什么时候才会出现。" }]
+    },
+    {
+      "type": "slide",
+      "title": "白板：在相图上标出三相点",
+      "order": 4,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-whiteboard",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#0F6E56", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_head",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>在相图上找到三相点</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            }
+          ]
+        }
+      },
+      "whiteboards": [
+        {
+          "id": "wb-phase-diagram",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#0F6E56", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "wb_line_melt",
+              "type": "line",
+              "left": 200,
+              "top": 120,
+              "width": 260,
+              "start": [0, 0],
+              "end": [260, 160],
+              "points": ["", ""],
+              "style": "solid",
+              "color": "#0F6E56"
+            },
+            {
+              "id": "wb_line_vapor",
+              "type": "line",
+              "left": 200,
+              "top": 280,
+              "width": 400,
+              "start": [0, 0],
+              "end": [400, -180],
+              "points": ["", "arrow"],
+              "style": "solid",
+              "color": "#185FA5"
+            },
+            {
+              "id": "wb_text_triple",
+              "type": "text",
+              "left": 180,
+              "top": 300,
+              "width": 260,
+              "height": 49,
+              "rotate": 0,
+              "content": "<p style=\"font-size:18px;\"><strong>三相点 (273.16 K, 611.657 Pa)</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#0F6E56"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        { "id": "a1", "type": "wb_open" },
+        {
+          "id": "a2",
+          "type": "wb_draw_text",
+          "content": "三相点：273.16 K / 611.657 Pa",
+          "x": 0.2,
+          "y": 0.55
+        },
+        { "id": "a3", "type": "speech", "text": "三条相界在这一点交汇。" },
+        { "id": "a4", "type": "wb_close" }
+      ]
+    }
+  ],
+  "mediaIndex": {
+    "audio/audio-1.mp3": {
+      "type": "audio",
+      "sourceRef": "audio/audio-1.mp3",
+      "format": "mp3",
+      "mimeType": "audio/mpeg",
+      "duration": 4.2
+    }
+  }
+}
