@@ -1,0 +1,35 @@
+{
+  "name": "maic-course-authoring-mcp",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server：让外部 Agent 自主编写 MAIC 课件并打包成 .maic.zip",
+  "license": "MIT",
+  "bin": {
+    "maic-course-mcp": "./dist/server.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsdown && node scripts/postbuild.mjs",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/server.mjs",
+    "test": "npm run build && node test/smoke.mjs",
+    "license:check": "node ../../scripts/apply-license-headers.mjs --check",
+    "license:apply": "node ../../scripts/apply-license-headers.mjs"
+  },
+  "dependencies": {
+    "@openmaic/dsl": "0.11.1",
+    "ajv": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsdown": "^0.23.0",
+    "typescript": "^7.0.2"
+  }
+}

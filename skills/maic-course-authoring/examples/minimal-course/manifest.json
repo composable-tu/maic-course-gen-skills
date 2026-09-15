@@ -1,0 +1,140 @@
+{
+  "formatVersion": 1,
+  "exportedAt": "2026-09-15T00:00:00.000Z",
+  "stage": {
+    "name": "示例：水的三相点",
+    "description": "两页最小示例，用于对照字段写法与媒体引用规则。",
+    "createdAt": 1757894400000,
+    "updatedAt": 1757894400000
+  },
+  "agents": [
+    {
+      "name": "张老师",
+      "role": "teacher",
+      "persona": "严谨，喜欢用具体数字说明问题。",
+      "avatar": "teacher-1",
+      "color": "#4F8EF7",
+      "priority": 1
+    }
+  ],
+  "scenes": [
+    {
+      "type": "slide",
+      "title": "什么是三相点",
+      "order": 1,
+      "content": {
+        "type": "slide",
+        "canvas": {
+          "id": "canvas-1",
+          "viewportSize": 1000,
+          "viewportRatio": 0.5625,
+          "theme": {
+            "backgroundColor": "#FFFFFF",
+            "themeColors": ["#4F8EF7", "#333333"],
+            "fontColor": "#333333",
+            "fontName": "Microsoft YaHei"
+          },
+          "elements": [
+            {
+              "id": "text_title",
+              "type": "text",
+              "left": 60,
+              "top": 60,
+              "width": 880,
+              "height": 70,
+              "rotate": 0,
+              "content": "<p style=\"font-size:32px;\"><strong>水的三相点</strong></p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "text_points",
+              "type": "text",
+              "left": 60,
+              "top": 180,
+              "width": 880,
+              "height": 130,
+              "rotate": 0,
+              "content": "<p style=\"font-size:18px;\">• 温度 273.16 K</p><p style=\"font-size:18px;\">• 压力 611.657 Pa</p><p style=\"font-size:18px;\">• 气液固三态共存</p>",
+              "defaultFontName": "Microsoft YaHei",
+              "defaultColor": "#333333"
+            },
+            {
+              "id": "img_diagram",
+              "type": "image",
+              "left": 700,
+              "top": 340,
+              "width": 240,
+              "height": 160,
+              "rotate": 0,
+              "fixedRatio": false,
+              "src": "media/asset-1.png"
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "type": "speech",
+          "text": "我们先看三相点的定义：气、液、固三态共存的唯一温度和压力组合。",
+          "audioRef": "audio/audio-1.mp3"
+        },
+        {
+          "id": "a2",
+          "type": "spotlight",
+          "elementId": "text_points"
+        },
+        {
+          "id": "a3",
+          "type": "speech",
+          "text": "温度是 273.16 K，压力是 611.657 Pa。"
+        }
+      ]
+    },
+    {
+      "type": "quiz",
+      "title": "小测：三相点的温度",
+      "order": 2,
+      "content": {
+        "type": "quiz",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "question": "水的三相点温度是多少？",
+            "options": [
+              { "label": "273.16 K", "value": "A" },
+              { "label": "273.15 K", "value": "B" },
+              { "label": "373.15 K", "value": "C" }
+            ],
+            "answer": ["A"],
+            "analysis": "三相点是 273.16 K；273.15 K 是标准大气压下的冰点，两者相差 0.01 K。",
+            "hasAnswer": true,
+            "points": 1
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a4",
+          "type": "speech",
+          "text": "来做一道题，检查一下刚才的要点。"
+        }
+      ]
+    }
+  ],
+  "mediaIndex": {
+    "media/asset-1.png": {
+      "type": "image",
+      "sourceRef": "media/asset-1.png",
+      "mimeType": "image/png"
+    },
+    "audio/audio-1.mp3": {
+      "type": "audio",
+      "sourceRef": "audio/audio-1.mp3",
+      "format": "mp3",
+      "mimeType": "audio/mpeg"
+    }
+  }
+}

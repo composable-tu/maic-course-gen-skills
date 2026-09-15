@@ -141,3 +141,13 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# ── 本仓库 ────────────────────────────────────────────────────────────────
+# 技能的 MCP 构建产物是刻意提交的：单文件、零依赖，
+# 消费者 clone 后无需 npm install 即可运行。
+# 上方通用规则忽略了所有名为 dist 的目录，这里为 MCP 产物显式豁免。
+!skills/maic-course-authoring/mcp/dist/
+!skills/maic-course-authoring/mcp/dist/**
+
+# 临时排查脚本
+tmp-*.mjs
