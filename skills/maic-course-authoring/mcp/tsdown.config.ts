@@ -1,6 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 new-maic contributors
+ * Copyright (c) 2026 maic-course-gen-skills contributors
  */
 
 import { defineConfig } from 'tsdown';

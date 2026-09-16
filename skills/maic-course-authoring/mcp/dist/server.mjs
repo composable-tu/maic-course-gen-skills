@@ -895,7 +895,7 @@ function normalizeScene(scene) {
 //#region src/contract.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * MAIC 课件契约的常量知识。
@@ -1028,7 +1028,7 @@ const IMPORT_CHECKS = [
 //#region src/materials.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * 源材料库：对 `MAIC_MATERIALS_DIR` 目录的只读访问。
@@ -11381,7 +11381,7 @@ var stage_schema_default = {
 //#region src/validate-schema.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * 基于上游 JSON Schema 的结构校验。
@@ -11638,7 +11638,7 @@ function validateWithSchema(stage, scenes, scenePrefixes) {
 //#region src/zip.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * 最小 ZIP 读写实现。
@@ -11796,7 +11796,7 @@ function isSafeZipPath(path) {
 //#region src/validate.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * 校验与归一化。
@@ -12375,7 +12375,7 @@ function normalizeManifest(manifest) {
 //#region src/tools.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * 工具定义与实现。
@@ -13058,7 +13058,7 @@ function callTool(name, args) {
 //#region src/server.ts
 /**
 * SPDX-License-Identifier: MIT
-* Copyright (c) 2026 new-maic contributors
+* Copyright (c) 2026 maic-course-gen-skills contributors
 */
 /**
 * 入口：MCP stdio 传输 + CLI。

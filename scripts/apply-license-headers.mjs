@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 new-maic contributors
+ * Copyright (c) 2026 maic-course-gen-skills contributors
  */
 
 /**
@@ -46,7 +46,7 @@ SPDX-License-Identifier: MIT
 
 const OWN_HEADER = `/**
  * ${OWN_MARKER}
- * Copyright (c) 2026 new-maic contributors
+ * Copyright (c) 2026 maic-course-gen-skills contributors
  */`;
 
 function walk(dir, extensions, acc = []) {
