@@ -48,11 +48,39 @@ export function stripHtml(html: string): string {
   return String(html).replace(/<[^>]+>/g, '');
 }
 
-/** 估算文本在给定宽度下的行数（中英文都按 1em 估宽，减去 20px 内边距）。 */
+/**
+ * 按显示宽度估算文本长度，单位是 em（一个全角字符的宽度）。
+ *
+ * 最初按「字符数」估，等于把拉丁字母也当成 1em 宽——但拉丁字母实际约 0.5em。
+ * 一次 49 页的实战里，`UNIT 01`～`UNIT 05` 这类纯拉丁标签因此全部被误报为
+ * 「单行余量 ≥95%」，共 32 处假阳性，只能逐条人工排除。按字宽折算后这类
+ * 提示会自行消失。
+ */
+export function displayWidthEm(text: string): number {
+  let width = 0;
+  for (const ch of text) {
+    const code = ch.codePointAt(0) ?? 0;
+    const wide =
+      (code >= 0x1100 && code <= 0x115f) || // Hangul Jamo
+      (code >= 0x2e80 && code <= 0x303f) || // CJK 部首扩展 / 标点
+      (code >= 0x3040 && code <= 0x30ff) || // 平假名 / 片假名
+      (code >= 0x3130 && code <= 0x318f) || // 谚文兼容字母
+      (code >= 0x3400 && code <= 0x4dbf) || // CJK 扩展 A
+      (code >= 0x4e00 && code <= 0x9fff) || // CJK 统一表意文字
+      (code >= 0xac00 && code <= 0xd7a3) || // 谚文音节
+      (code >= 0xf900 && code <= 0xfaff) || // CJK 兼容表意文字
+      (code >= 0xff00 && code <= 0xffef) || // 全角形式
+      (code >= 0x20000 && code <= 0x3fffd); // CJK 扩展 B-F
+    width += wide ? 1 : 0.5;
+  }
+  return width;
+}
+
+/** 估算文本在给定宽度下的行数（按显示宽度折算，中英文混排分别计宽）。 */
 export function estimateLines(text: string, fontSize: number, width: number): number {
-  const charsPerLine = (width - 20) / fontSize;
-  if (charsPerLine <= 0) return 1;
-  return Math.max(1, Math.ceil(stripHtml(text).length / charsPerLine));
+  const emPerLine = (width - 20) / fontSize;
+  if (emPerLine <= 0) return 1;
+  return Math.max(1, Math.ceil(displayWidthEm(stripHtml(text)) / emPerLine));
 }
 
 /** 取一个文本元素里的最大字号；没写 font-size 时按 18px 估。 */
@@ -79,7 +107,7 @@ function checkTextBox(el: Loose, path: string, issues: LayoutIssue[]): void {
   if (width <= 0 || height <= 0) return;
 
   const fontSize = dominantFontSize(content);
-  const charsPerLine = (width - 20) / fontSize;
+  const emPerLine = (width - 20) / fontSize;
 
   // 按 <p> 分段估算总行数，比"总字符数 / 每行容量"更接近真实折行
   const paragraphs = content
@@ -88,7 +116,10 @@ function checkTextBox(el: Loose, path: string, issues: LayoutIssue[]): void {
     .filter((p) => p.length > 0);
   const lines =
     paragraphs.length > 0
-      ? paragraphs.reduce((sum, p) => sum + Math.max(1, Math.ceil(p.length / charsPerLine)), 0)
+      ? paragraphs.reduce(
+          (sum, p) => sum + Math.max(1, Math.ceil(displayWidthEm(p) / emPerLine)),
+          0,
+        )
       : 1;
 
   const table = H_TABLE[fontSize];
@@ -103,18 +134,14 @@ function checkTextBox(el: Loose, path: string, issues: LayoutIssue[]): void {
     });
   } else {
     const firstLine = paragraphs[0];
-    if (
-      lines === 1 &&
-      firstLine !== undefined &&
-      charsPerLine > 0 &&
-      firstLine.length > charsPerLine * WRAP_RISK_RATIO
-    ) {
+    const firstLineEm = firstLine !== undefined ? displayWidthEm(firstLine) : 0;
+    if (lines === 1 && firstLineEm > 0 && emPerLine > 0 && firstLineEm > emPerLine * WRAP_RISK_RATIO) {
       issues.push({
         path,
         message:
-          `折行风险：该行 ${firstLine.length} 字符，已用掉行容量 ` +
-          `${((firstLine.length / charsPerLine) * 100).toFixed(0)}%（宽 ${width}，${fontSize}px）。` +
-          '离折行只差一点，高度预算可能不保。',
+          `折行风险：该行显示宽度约 ${firstLineEm.toFixed(1)}em，已用掉行容量 ` +
+          `${((firstLineEm / emPerLine) * 100).toFixed(0)}%（宽 ${width}，${fontSize}px，` +
+          `${emPerLine.toFixed(1)}em/行）。离折行只差一点，高度预算可能不保。`,
       });
     }
   }

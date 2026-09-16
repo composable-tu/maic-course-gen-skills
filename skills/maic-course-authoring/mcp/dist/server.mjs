@@ -1219,6 +1219,22 @@ const isObject$1 = (v) => typeof v === "object" && v !== null && !Array.isArray(
 function stripHtml(html) {
 	return String(html).replace(/<[^>]+>/g, "");
 }
+/**
+* 按显示宽度估算文本长度，单位是 em（一个全角字符的宽度）。
+*
+* 最初按「字符数」估，等于把拉丁字母也当成 1em 宽——但拉丁字母实际约 0.5em。
+* 一次 49 页的实战里，`UNIT 01`～`UNIT 05` 这类纯拉丁标签因此全部被误报为
+* 「单行余量 ≥95%」，共 32 处假阳性，只能逐条人工排除。按字宽折算后这类
+* 提示会自行消失。
+*/
+function displayWidthEm(text) {
+	let width = 0;
+	for (const ch of text) {
+		const code = ch.codePointAt(0) ?? 0;
+		width += code >= 4352 && code <= 4447 || code >= 11904 && code <= 12351 || code >= 12352 && code <= 12543 || code >= 12592 && code <= 12687 || code >= 13312 && code <= 19903 || code >= 19968 && code <= 40959 || code >= 44032 && code <= 55203 || code >= 63744 && code <= 64255 || code >= 65280 && code <= 65519 || code >= 131072 && code <= 262141 ? 1 : .5;
+	}
+	return width;
+}
 /** 取一个文本元素里的最大字号；没写 font-size 时按 18px 估。 */
 function dominantFontSize(content) {
 	const sizes = [...String(content).matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
@@ -1233,9 +1249,9 @@ function checkTextBox(el, path, issues) {
 	const height = typeof el.height === "number" ? el.height : 0;
 	if (width <= 0 || height <= 0) return;
 	const fontSize = dominantFontSize(content);
-	const charsPerLine = (width - 20) / fontSize;
+	const emPerLine = (width - 20) / fontSize;
 	const paragraphs = content.split(/<\/p>/i).map((p) => stripHtml(p).trim()).filter((p) => p.length > 0);
-	const lines = paragraphs.length > 0 ? paragraphs.reduce((sum, p) => sum + Math.max(1, Math.ceil(p.length / charsPerLine)), 0) : 1;
+	const lines = paragraphs.length > 0 ? paragraphs.reduce((sum, p) => sum + Math.max(1, Math.ceil(displayWidthEm(p) / emPerLine)), 0) : 1;
 	const needed = H_TABLE[fontSize]?.[lines - 1] ?? Math.round(fontSize * 1.5 * lines) + 20;
 	if (needed > height) issues.push({
 		path: `${path}/height`,
@@ -1243,9 +1259,10 @@ function checkTextBox(el, path, issues) {
 	});
 	else {
 		const firstLine = paragraphs[0];
-		if (lines === 1 && firstLine !== void 0 && charsPerLine > 0 && firstLine.length > charsPerLine * WRAP_RISK_RATIO) issues.push({
+		const firstLineEm = firstLine !== void 0 ? displayWidthEm(firstLine) : 0;
+		if (lines === 1 && firstLineEm > 0 && emPerLine > 0 && firstLineEm > emPerLine * WRAP_RISK_RATIO) issues.push({
 			path,
-			message: `折行风险：该行 ${firstLine.length} 字符，已用掉行容量 ${(firstLine.length / charsPerLine * 100).toFixed(0)}%（宽 ${width}，${fontSize}px）。离折行只差一点，高度预算可能不保。`
+			message: `折行风险：该行显示宽度约 ${firstLineEm.toFixed(1)}em，已用掉行容量 ${(firstLineEm / emPerLine * 100).toFixed(0)}%（宽 ${width}，${fontSize}px，${emPerLine.toFixed(1)}em/行）。离折行只差一点，高度预算可能不保。`
 		});
 	}
 }

@@ -551,6 +551,25 @@ try {
   const layout3 = await client.call('draft_layout', { manifest: buildManifest() });
   assert(!isError(layout3), '干净版式不误报', toolText(layout3).split('\n')[0]);
 
+  // 折行估算按显示宽度折算（拉丁 ≈ 0.5em）：纯拉丁标签不应被当成溢出
+  // （旧算法按字符数估宽，会把 "UNIT 01 OVERVIEW" 误判成两行 → 文本溢出）
+  const latin = buildManifest();
+  latin.scenes[0].content.canvas.elements.push({
+    id: 'latin_label', type: 'text', left: 60, top: 440, width: 200, height: 46, rotate: 0,
+    content: '<p style="font-size:14px;">UNIT 01 OVERVIEW</p>',
+    defaultFontName: 'Arial', defaultColor: '#333',
+  });
+  const latinCjk = buildManifest();
+  latinCjk.scenes[0].content.canvas.elements.push({
+    id: 'cjk_label', type: 'text', left: 60, top: 440, width: 200, height: 46, rotate: 0,
+    content: '<p style="font-size:14px;">第一单元总览第二单元</p>',
+    defaultFontName: 'Arial', defaultColor: '#333',
+  });
+  const rLatin = await client.call('draft_layout', { manifest: latin });
+  const rCjk = await client.call('draft_layout', { manifest: latinCjk });
+  assert(!/latin_label/.test(toolText(rLatin)), '纯拉丁标签不再误报溢出/折行（按 0.5em 估宽）');
+  assert(/折行风险/.test(toolText(rCjk)), '同宽中文仍会提示（1 字 1em）');
+
   // id 归一：同页重复 id + spotlight 引用，归一后应全部唯一且引用可达
   const dupManifest = {
     stage: { name: 'T', createdAt: 1, updatedAt: 1 },

@@ -129,7 +129,7 @@ maic-course-gen-skills/
 
 ## 已验证
 
-- `npm test`：**92 项全绿**，通过真实 MCP stdio 协议驱动构建产物，以上游 JSON Schema
+- `npm test`：**94 项全绿**，通过真实 MCP stdio 协议驱动构建产物，以上游 JSON Schema
   为闸门。
 - 自建 ZIP 写入器（`node:zlib` + 手写容器 + CRC32）产出的包能被系统 `unzip` 读取；
   产物除 `node:` 内置模块外无任何运行时 import。
