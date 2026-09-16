@@ -13,7 +13,7 @@
     {
       "name": "张老师",
       "role": "teacher",
-      "persona": "严谨，喜欢用具体数字说明问题，会主动请学生复述关键数值。",
+      "persona": "严谨的物理教师，习惯用具体数字说明问题，讲完关键数值会请学生复述。学生最常犯的错误是把三相点温度（273.16 K）和标准大气压下的冰点（273.15 K）混为一谈，他会在课堂上专门纠正这一点。",
       "avatar": "/avatars/teacher.png",
       "color": "#4F8EF7",
       "priority": 10,
@@ -30,7 +30,7 @@
     {
       "name": "小林",
       "role": "student",
-      "persona": "爱提问，常把三相点和冰点搞混，需要被纠正。",
+      "persona": "爱提问的初学者，常把三相点和冰点搞混，需要被纠正。被点名回答时会先说出错误答案再自我修正。",
       "avatar": "/avatars/note-taker.png",
       "color": "#FFB347",
       "priority": 20
@@ -127,7 +127,8 @@
         {
           "id": "p01_a2",
           "type": "spotlight",
-          "elementId": "p01_text_definition"
+          "elementId": "p01_text_definition",
+          "dimOpacity": 0.6
         },
         {
           "id": "p01_a3",
@@ -137,7 +138,8 @@
         {
           "id": "p01_a4",
           "type": "laser",
-          "elementId": "p01_text_history"
+          "elementId": "p01_text_history",
+          "color": "#E11D48"
         },
         {
           "id": "p01_a5",
@@ -183,6 +185,7 @@
             "id": "p02_q2",
             "type": "short_answer",
             "question": "为什么 2019 年 SI 修订后，三相点不再用于定义开尔文？请用一两句话说明。",
+            "commentPrompt": "答案应提到：开尔文改由玻尔兹曼常数的固定数值定义，不再依赖任何物质的性质；三相点仍是重要的复现固定点。只说其一即可给分。",
             "analysis": "修订后开尔文由玻尔兹曼常数的固定数值定义，不再依赖任何物质的性质；三相点仍是重要的固定点。",
             "hasAnswer": false,
             "points": 2
@@ -204,12 +207,12 @@
       "content": {
         "type": "interactive",
         "url": "",
-        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:system-ui;margin:24px;background:#fff;color:#333}input[type=range]{width:100%}#state{margin-top:16px;padding:12px;border-radius:8px;background:#eef4fb}.stat{display:inline-block;margin-right:24px;padding:8px 12px;border-radius:6px;background:#f3f4f6}</style></head><body><h3>调节压力，观察水的相态（温度固定在 0.01 °C）</h3><input id=\"pressure\" type=\"range\" min=\"100\" max=\"2000\" value=\"611\" step=\"1\"><p>压力：<b id=\"pressure-value\">611</b> Pa</p><div id=\"state\">—</div><span class=\"stat\" id=\"stat-pressure\">压力读数</span><span class=\"stat\" id=\"stat-phase\">相态判定</span><button id=\"apply-preset\">恢复三相点压力</button><script>const P_TRIPLE=611.657;const p=document.getElementById('pressure'),pv=document.getElementById('pressure-value'),st=document.getElementById('state');function upd(){const v=+p.value;pv.textContent=v;st.textContent=v<P_TRIPLE?'气态（低于三相点压力，液态不存在）':'气液固三相共存或液态（达到/超过三相点压力）';}p.addEventListener('input',upd);document.getElementById('apply-preset').addEventListener('click',()=>{p.value=611;upd();});upd();</script></body></html>",
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:system-ui;margin:24px;background:#fff;color:#333}input[type=range]{width:100%}#state{margin-top:16px;padding:12px;border-radius:8px;background:#eef4fb}.stat{display:inline-block;margin-right:24px;padding:8px 12px;border-radius:6px;background:#f3f4f6}.flash{outline:3px solid #f59e0b}</style></head><body><h3>调节压力，观察水的相态（温度固定在 0.01 °C）</h3><input id=\"pressure\" type=\"range\" min=\"100\" max=\"2000\" value=\"611\" step=\"1\"><p>压力：<b id=\"pressure-value\">611</b> Pa</p><div id=\"state\">—</div><span class=\"stat\" id=\"stat-pressure\">压力读数</span><span class=\"stat\" id=\"stat-phase\">相态判定</span><button id=\"apply-preset\">恢复三相点压力</button><script>const P_TRIPLE=611.657;const p=document.getElementById('pressure'),pv=document.getElementById('pressure-value'),st=document.getElementById('state');function upd(){const v=+p.value;pv.textContent=v;st.textContent=v<P_TRIPLE?'气态（低于三相点压力，液态不存在）':'气液固三相共存或液态（达到/超过三相点压力）';}p.addEventListener('input',upd);document.getElementById('apply-preset').addEventListener('click',()=>{p.value=611;upd();});upd();\nwindow.addEventListener('message',function(event){const d=event.data||{};if(d.type==='SET_WIDGET_STATE'&&d.state&&typeof d.state.pressure==='number'){p.value=d.state.pressure;upd();}else if(d.type==='HIGHLIGHT_ELEMENT'&&d.target){const el=document.querySelector(d.target);if(el){el.classList.add('flash');setTimeout(function(){el.classList.remove('flash');},4000);}}});\n</script></body></html>",
         "widgetType": "simulation",
         "widgetConfig": {
           "type": "simulation",
           "concept": "pressure_vs_phase",
-          "description": "压力-相态交互模拟器：在 0.01 °C 下调节压力，观察低于三相点压力时液态消失。",
+          "description": "压力-相态交互模拟器：在 0.01 °C 下调节压力，观察低于三相点压力时液态消失。widgetConfig 只在生成期作为提示词材料，不会传进 iframe——HTML 里的 message 监听器才是运行时契约。",
           "variables": [
             {
               "name": "pressure",
@@ -322,78 +325,6 @@
           ]
         }
       },
-      "whiteboards": [
-        {
-          "id": "wb-phase-diagram",
-          "viewportSize": 1000,
-          "viewportRatio": 0.5625,
-          "theme": {
-            "backgroundColor": "#FFFFFF",
-            "themeColors": [
-              "#0F6E56",
-              "#333333"
-            ],
-            "fontColor": "#333333",
-            "fontName": "Microsoft YaHei"
-          },
-          "elements": [
-            {
-              "id": "p04_wb1_wb_line_melt",
-              "type": "line",
-              "left": 200,
-              "top": 120,
-              "width": 260,
-              "start": [
-                0,
-                0
-              ],
-              "end": [
-                260,
-                160
-              ],
-              "points": [
-                "",
-                ""
-              ],
-              "style": "solid",
-              "color": "#0F6E56"
-            },
-            {
-              "id": "p04_wb1_wb_line_vapor",
-              "type": "line",
-              "left": 200,
-              "top": 280,
-              "width": 400,
-              "start": [
-                0,
-                0
-              ],
-              "end": [
-                400,
-                -180
-              ],
-              "points": [
-                "",
-                "arrow"
-              ],
-              "style": "solid",
-              "color": "#185FA5"
-            },
-            {
-              "id": "p04_wb1_wb_text_triple",
-              "type": "text",
-              "left": 180,
-              "top": 300,
-              "width": 260,
-              "height": 49,
-              "rotate": 0,
-              "content": "<p style=\"font-size:18px;\"><strong>三相点 (273.16 K, 611.657 Pa)</strong></p>",
-              "defaultFontName": "Microsoft YaHei",
-              "defaultColor": "#0F6E56"
-            }
-          ]
-        }
-      ],
       "actions": [
         {
           "id": "p04_a1",
@@ -401,18 +332,39 @@
         },
         {
           "id": "p04_a2",
-          "type": "wb_draw_text",
-          "content": "三相点：273.16 K / 611.657 Pa",
-          "x": 0.2,
-          "y": 0.55
+          "type": "speech",
+          "text": "我们在白板上画一张示意相图：两条相界在这一点交汇。"
         },
         {
           "id": "p04_a3",
-          "type": "speech",
-          "text": "三条相界在这一点交汇。"
+          "type": "wb_draw_text",
+          "content": "三相点 273.16 K / 611.657 Pa",
+          "x": 180,
+          "y": 300
         },
         {
           "id": "p04_a4",
+          "type": "wb_draw_line",
+          "startX": 120,
+          "startY": 120,
+          "endX": 460,
+          "endY": 280
+        },
+        {
+          "id": "p04_a5",
+          "type": "wb_draw_line",
+          "startX": 120,
+          "startY": 460,
+          "endX": 620,
+          "endY": 180
+        },
+        {
+          "id": "p04_a6",
+          "type": "speech",
+          "text": "注意两条相界与竖直线围出的区域，就是三相点附近。"
+        },
+        {
+          "id": "p04_a7",
           "type": "wb_close"
         }
       ]

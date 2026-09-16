@@ -672,7 +672,45 @@ try {
   const rGood = await client.call('draft_validate', { manifest: goodAvatar });
   assert(!/不是已知的应用内置头像/.test(toolText(rGood)), '官方内置头像路径不告警');
 
-  console.log('\n[8c] course_pack_maic_zip');
+  console.log('\n[8c] 动作语义检查（来自播放路径的静默失效模式）');
+
+  const semantic = buildManifest();
+  semantic.scenes[0].actions.push(
+    { id: 's1', type: 'wb_draw_text', content: '要点', x: 0.2, y: 0.55 },       // 归一化坐标误用
+    { id: 's2', type: 'discussion', topic: '？', agentIndex: 5 },               // 越界
+  );
+  semantic.scenes[1].content.questions[0].answer = ['X'];                        // 对不上选项
+  const rSem = await client.call('draft_validate', { manifest: semantic });
+  const semText = toolText(rSem);
+  assert(!isError(rSem), '语义问题全部是警告（不阻断）');
+  assert(/不是归一化坐标/.test(semText), '白板归一化坐标误用被抓到');
+  assert(/agentIndex 5 越界/.test(semText), 'discussion agentIndex 越界被抓到');
+  assert(/答案 "X" 既不是任何 option/.test(semText), 'quiz 答案与选项脱节被抓到');
+
+  const widgetScene = {
+    type: 'interactive',
+    title: 'W',
+    order: 2,
+    content: {
+      type: 'interactive',
+      html: '<!doctype html><html><body>x</body></html>',
+      widgetType: 'simulation',
+      widgetConfig: {
+        type: 'simulation',
+        variables: [{ name: 'depth', min: 0, max: 10, default: 6 }],
+      },
+    },
+    actions: [{ id: 'w1', type: 'widget_setState', state: { volume: 5 } }],
+  };
+  const widgetManifest = { stage: { name: 'W', createdAt: 1, updatedAt: 1 }, scenes: [widgetScene] };
+  const rWidget = await client.call('draft_validate', { manifest: widgetManifest });
+  assert(
+    /与 widgetConfig\.variables 的变量名.*没有任何交集|state 的键（.*）与 widgetConfig/.test(toolText(rWidget).replace(/\n/g, ' ')) ||
+      /没有任何交集/.test(toolText(rWidget)),
+    'widget state 键与变量名脱节被抓到',
+  );
+
+  console.log('\n[8d] course_pack_maic_zip');
   const noBytes = await client.call('course_pack_maic_zip', {
     manifest: buildManifest(),
     outputPath: zipPath,

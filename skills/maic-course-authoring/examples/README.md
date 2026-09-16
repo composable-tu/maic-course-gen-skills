@@ -51,15 +51,20 @@ node $M --pack skills/maic-course-authoring/examples/minimal-course/manifest.jso
 ### full-course — 完整能力拼装
 
 - `stage.language` 写成**语言指令段落**（语气、术语对照、受众），不是 `"zh-CN"` 这种代码
-- 双智能体，teacher 带 `voiceConfig` / `voiceDesign`（TTS 音色），`discussion` 动作用
-  `agentIndex` 指向学生
+- 双智能体，teacher 带 `voiceConfig` / `voiceDesign`（TTS 音色）与官方风格的
+  `persona` 完整段落；`discussion` 动作用 `agentIndex` 指向学生
 - `interactive` 场景：内嵌 `html` + `widgetType` + `widgetConfig`（simulation，
   形状为 `concept` / `variables[]` / `presets[]` / `description`）
-- `widget_setState`（直接改写模拟器变量）与 `widget_highlight`（`target` 是 HTML 里的
-  **CSS 选择器**，所以 HTML 里给讲解点显式起了 id）
-- `laser` 动作、slide 级 `background`、slide content 的 `schemaVersion: 1`
-- `whiteboards` 字段：一块白板页，内含 `line` 与文字元素
-- `quiz` 同时含 `single`（自动判分）与 `short_answer`（`hasAnswer: false`）
+- **HTML 自带 `message` 监听器**（`SET_WIDGET_STATE` / `HIGHLIGHT_ELEMENT`）——
+  这是 `widget_*` 动作生效的前提，平台不会替你注入
+- `widget_setState`（直接改写模拟器变量，键与 `widgetConfig.variables[].name` 对齐）
+  与 `widget_highlight`（`target` 是 HTML 里的 **CSS 选择器**）
+- `laser`（带 `color`）与 `spotlight`（带 `dimOpacity`）
+- 白板页用 `wb_open → wb_draw_text / wb_draw_line → wb_close` 动作序列构建，
+  **坐标是 1000×563 像素**（`scene.whiteboards` 字段播放时不渲染，故不写）
+- slide 级 `background`、slide content 的 `schemaVersion: 1`
+- `quiz` 同时含 `single`（自动判分）与 `short_answer`（`commentPrompt` 评分指引，
+  `hasAnswer: false`）
 - 已跑过 `scene_normalize_ids`：全部 id 带 `p{页码}_` 前缀，全篇唯一
 
 ## 注意事项

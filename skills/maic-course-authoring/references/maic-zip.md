@@ -221,6 +221,90 @@ media/asset-1.poster.png       ← 可选，视频封面（与视频同序号）
 它会被拼进生成提示词（映射到 `stage.languageDirective`）。所以这里写的应当是
 **对语气、术语对照、受众的具体要求**，而不是 `"zh-CN"` 这种代码。
 
+## 播放语义：导入之后，应用怎么消费这些字段
+
+导入只是把数据搬进 IndexedDB。真正的契约是**播放路径怎么读它们**——以下结论来自
+逐行核对播放引擎（`lib/playback/engine.ts`、`lib/action/engine.ts`）与渲染组件，
+每条都标注了出处。这一节是"字段合法但行为不符"问题的最终依据。
+
+### speech：没有 audioRef 不等于出错，等于"静默阅读"
+
+播放引擎不做服务端 TTS。`speech` 动作先尝试 `audioId`（导入改写后的音频），
+失败则回落到两条路：
+
+1. 用户显式开启了 `browser-native-tts`（Web Speech API）→ 浏览器现场朗读；
+2. 否则走**阅读计时器**：按文本长度估算时长静默推进，文本仍以字幕显示。
+
+所以：**要保证出声，就必须预生成音频并挂 `audioRef`**。"没挂 audioRef 的课件"
+在没开浏览器 TTS 的用户那里是一门哑课。音频字节缺失也不报错
+（`audio-player.ts` "skip silently"）。
+
+### spotlight / laser：元素不存在时完全静默
+
+执行只是把 `elementId` 写进 canvas store；渲染组件用
+`document.getElementById(prefix + elementId)` 找 DOM 节点，找不到就不渲染高亮层。
+**不报错、不跳过整个播放**，效果 5 秒后自动清除。可选字段：`spotlight.dimOpacity`
+（默认 0.5）、`laser.color`（默认 `#ff0000`）。
+
+### discussion：agentIndex 越界会被静默兜底
+
+导入时 `agentIndex → agentId`：越界或缺失就回落到**兜底发言人（优先 student 角色，
+其次第一个非 teacher）**；播放时还会按用户在设置里勾选的智能体过滤，被勾掉的
+整条跳过。所以 `agentIndex` 要对着 `agents[]` 下标数清楚。
+
+### widget_*：动作只是 postMessage，监听器是你自己的 HTML 写的
+
+宿主把 `SET_WIDGET_STATE`（带 `state`）、`HIGHLIGHT_ELEMENT` /
+`ANNOTATE_ELEMENT` / `REVEAL_ELEMENT`（带 `target`）postMessage 进 iframe。
+**接收端不是平台注入的，是 interactive 的 HTML 必须自己写的**——上游生成模板的
+原话："Your HTML MUST register this listener, or those actions silently do nothing"。
+手写 HTML 时必须在末尾加这个 `window.addEventListener('message', …)`。
+
+其他要点：
+
+- `widgetConfig` **不会**以任何形式传进 iframe——它只在生成期作为提示词材料。
+  `state` 的键的语义完全由你自己的监听器代码定义。
+- iframe sandbox 是 `allow-scripts allow-forms allow-popups`，**刻意不带
+  `allow-same-origin`**（null origin）；平台注入了 localStorage 内存垫片，但
+  不要依赖持久存储。
+- `widgetConfig.variables[].name` 与 `widget_setState.state` 的键名应一致——
+  运行时不校验，但对不上就打不中（`draft_validate` 会提示）。
+
+### 白板：`scene.whiteboards` 播放时不渲染
+
+**播放画板是 stage 级的运行时白板，白板内容只能由 `wb_*` 动作序列现场构建。**
+manifest 里的 `whiteboards` 字段只参与媒体引用改写与导出 round-trip，
+把画面数据塞在那里不会出现在播放白板上。写白板页的正确方式是
+`wb_open → wb_draw_* → wb_close` 的动作序列。
+
+`wb_*` 的坐标是 **1000 × 563 像素坐标系**（x 从 0 到 1000），不是 0–1 归一化坐标
+——写成 `x: 0.2` 会把内容画到白板左上角。`wb_draw_text` 对非 `<` 开头的内容自动包
+`<p style="font-size:…">`，疑似 LaTeX 会自动改路由成 `wb_draw_latex`；
+省略 width/height 时默认 400×100、18px、`#333333`。
+
+### quiz：判分读什么
+
+- `answer` 是 **option.value 的数组**（`["A"]` 或多选 `["A","C"]`）；
+  兼容"恰好唯一匹配某个 option.label"的旧写法。对不上的答案判错。
+- `points` 缺省按 1 分计；`hasAnswer` **只是元数据，判分完全不读**（判分只看 `type`）；
+  `analysis` 仅在回顾阶段展示。
+- `short_answer` 走 `/api/quiz-grade` AI 判分，失败兜底给一半分；
+  `commentPrompt` 是传给评分器的指引，写清给分点能显著提升判分质量。
+
+### 其他播放期事实
+
+- `canvas.theme` 里播放真正生效的只有 **`fontColor` 和 `fontName`**；
+  `backgroundColor` 由 slide 级 `background` 承担，`themeColors` 只影响编辑器新建形状的默认色。
+- `scene.multiAgent` 只做导入/导出 round-trip，**播放与讨论都不读它**。
+- 没有 `actions` 的场景不会被跳过——会得到一个"合成停留拍"。
+- `avatar` 有两条渲染路径：顶栏是 `<img>` 直出（无效路径 = 空圆圈）；
+  聊天/揭示卡则是"URL 否则当 **emoji**"——所以 `avatar: "🧑"`（单码位 emoji，
+  不含零宽连接符）也是合法写法。
+- `video/audio` 的 `src`：`https?/data/blob/` 与相对路径直接当 URL 用；
+  资产池 ID 则按任务解析，解析失败显示占位。`play_video` 最多等 5 分钟。
+- 播放引擎对每个动作有固定耗时（开板 2s、绘制 0.8s、widget 0.3s、效果 5s 自动清除），
+  写动作序列时按此估算一页的实际时长。
+
 ## 硬规则
 
 - `manifest.json` 必须在 ZIP 根，不能放在子目录。

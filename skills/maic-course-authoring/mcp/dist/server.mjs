@@ -12211,10 +12211,102 @@ function validateReferences(manifest) {
 		}
 	});
 	checkAgentAvatars(manifest, warnings);
+	validateActionSemantics(manifest, errors, warnings);
 	return {
 		errors,
 		warnings
 	};
+}
+/**
+* 动作与场景的语义检查——这些字段的值 schema 都认（类型对、无未知字段），
+* 但取值本身会让动作**静默失效**，只能靠播放路径的知识来判断。
+* 全部是警告：运行时的兜底行为各不相同，Agent 应当逐条判断。
+*/
+function validateActionSemantics(manifest, errors, warnings) {
+	const agents = Array.isArray(manifest.agents) ? manifest.agents : [];
+	const WB_W = 1e3;
+	const WB_H = 563;
+	const drawTypes = /* @__PURE__ */ new Set([
+		"wb_draw_text",
+		"wb_draw_latex",
+		"wb_draw_shape",
+		"wb_draw_chart",
+		"wb_draw_table",
+		"wb_draw_code"
+	]);
+	(Array.isArray(manifest.scenes) ? manifest.scenes : []).forEach((scene, i) => {
+		if (!isObj(scene)) return;
+		const actions = Array.isArray(scene.actions) ? scene.actions : [];
+		const where = (j) => `/scenes/${i}/actions/${j}`;
+		actions.forEach((action, j) => {
+			if (!isObj(action)) return;
+			const type = String(action.type);
+			if (drawTypes.has(type)) {
+				const x = typeof action.x === "number" ? action.x : void 0;
+				const y = typeof action.y === "number" ? action.y : void 0;
+				if (x !== void 0 && y !== void 0 && x >= 0 && x <= 1 && y >= 0 && y <= 1) warnings.push({
+					path: `${where(j)}/x`,
+					message: `x=${x}, y=${y} 落在 0–1 区间——白板坐标是 **${WB_W}×${WB_H} 像素坐标系**，不是归一化坐标，这样写会把内容画到白板左上角。按像素写（如 x: 180, y: 300）。`
+				});
+				else if (x !== void 0 && (x < 0 || x > WB_W) || y !== void 0 && (y < 0 || y > WB_H)) warnings.push({
+					path: `${where(j)}/x`,
+					message: `白板坐标 (${x}, ${y}) 超出画布 ${WB_W}×${WB_H}，内容会画到板外。`
+				});
+			}
+			if (type === "wb_draw_line") {
+				const offBoard = [
+					"startX",
+					"startY",
+					"endX",
+					"endY"
+				].map((k) => ({
+					k,
+					v: typeof action[k] === "number" ? action[k] : void 0
+				})).filter((c) => c.v !== void 0).filter(({ k, v }) => k === "startX" || k === "endX" ? v < 0 || v > WB_W : v < 0 || v > WB_H);
+				if (offBoard.length > 0) warnings.push({
+					path: `${where(j)}/startX`,
+					message: `白板线段坐标超出画布 ${WB_W}×${WB_H}：${offBoard.map(({ k, v }) => `${k}=${v}`).join(", ")}。白板坐标系是 ${WB_W}×${WB_H} 像素。`
+				});
+			}
+			if (type === "discussion" && typeof action.agentIndex === "number") {
+				const idx = action.agentIndex;
+				if (!Number.isInteger(idx) || idx < 0 || idx >= agents.length) {
+					const tail = agents.length === 0 ? "而本课件没有 agents 数组，讨论将没有明确的发言者。" : "不一定是你要点名的人。请核对下标。";
+					warnings.push({
+						path: `${where(j)}/agentIndex`,
+						message: `agentIndex ${idx} 越界（agents 共 ${agents.length} 个）。导入时会静默回落到兜底发言人（优先 student 角色，其次第一个非 teacher），` + tail
+					});
+				}
+			}
+			if (isObj(scene.content) && scene.content.type === "quiz" && Array.isArray(scene.content.questions)) scene.content.questions.forEach((question, q) => {
+				if (!isObj(question)) return;
+				const options = Array.isArray(question.options) ? question.options : [];
+				const answers = Array.isArray(question.answer) ? question.answer : [];
+				if (options.length === 0 || answers.length === 0) return;
+				const values = options.map((o) => isObj(o) && typeof o.value === "string" ? o.value : void 0).filter((v) => v !== void 0);
+				const labels = options.map((o) => isObj(o) && typeof o.label === "string" ? o.label : void 0).filter((v) => v !== void 0);
+				const p = `/scenes/${i}/content/questions/${q}/answer`;
+				for (const ans of answers) {
+					if (typeof ans !== "string") continue;
+					const byValue = values.includes(ans);
+					const byLabel = labels.filter((l) => l === ans).length === 1;
+					if (!byValue && !byLabel) warnings.push({
+						path: p,
+						message: `答案 "${ans}" 既不是任何 option 的 value，也不是唯一匹配的 label。判分按 option.value 全等比较，对不上的答案会被判为错。检查是否该写 "A"/"B" 这类选择键。`
+					});
+				}
+			});
+			if (type === "widget_setState" && isObj(action.state)) {
+				const interactive = isObj(scene.content) && scene.content.type === "interactive" ? scene.content : void 0;
+				const names = ((Array.isArray(interactive?.widgetConfig?.variables) ? interactive.widgetConfig.variables : void 0) ?? []).map((v) => isObj(v) && typeof v.name === "string" ? v.name : void 0).filter((v) => v !== void 0);
+				const stateKeys = Object.keys(action.state);
+				if (names.length > 0 && !stateKeys.some((k) => names.includes(k))) warnings.push({
+					path: `${where(j)}/state`,
+					message: `state 的键（${stateKeys.join(", ")}）与 widgetConfig.variables 的变量名（${names.join(", ")}）没有任何交集。运行时没有校验——set_state 只是向 iframepostMessage，键的语义由 HTML 里自己的 message 监听器定义；键名不一致动作会静默无效。`
+				});
+			}
+		});
+	});
 }
 /**
 * `agents[].avatar` 写的是**应用相对路径**（如 `/avatars/teacher.png`），导入时
