@@ -138,6 +138,7 @@ scene_clone({
 ## 阶段 4 · 打包与交付
 
 ```text
+0. 询问用户是否要加出处声明页              → 未同意就不要加（见下）
 1. draft_validate                           → 结构 + id 唯一性 + 引用完整性
 2. draft_layout                             → 版式：越界 / 溢出 / 折行 / 压盖
 3. scene_normalize_ids                      → id 加页前缀并去重（长课程必跑）
@@ -148,6 +149,69 @@ scene_clone({
    - 是否有材料无法解析/被截断
    - 导入方式：OpenMAIC 首页 → 导入课堂 → 选择 .maic.zip
 ```
+
+### 出处声明页：先问，再打，别自作主张
+
+本 Skill 产出的课件全部由 Agent 依据原文撰写、未经过 OpenMAIC 内部生成器，所以
+「此课件未采用 OpenMAIC 生成器生成」这句话对每一份成品都成立。但**要不要把它
+放进课件，是用户的决定，不是你的**：有人希望标注出处，也有人不想让最后一页
+多一块内容。
+
+规则：
+
+1. **交付前问一次**：「需要在课件末尾加一页出处声明（此课件未采用 OpenMAIC 生成器
+   生成）吗？」用户没回答就不要继续打包这一步；用户说不用，就跳过本节，
+   也不要再提。
+2. 用户同意后，在**所有内容页之后**追加一页声明（`order` = 最后一页 + 1）。
+   推荐一页极简声明页而不是往最后一页角落里塞小字——独立一页没有压盖风险，
+   也不打断原页面的排版。theme 抄全篇的，下面是可直接复制过校验的完整页：
+
+   ```json
+   {
+     "type": "slide",
+     "title": "出处声明",
+     "order": 50,
+     "content": {
+       "type": "slide",
+       "canvas": {
+         "id": "canvas-statement",
+         "viewportSize": 1000,
+         "viewportRatio": 0.5625,
+         "theme": {
+           "backgroundColor": "#FFFFFF",
+           "themeColors": ["#4F8EF7", "#333333"],
+           "fontColor": "#333333",
+           "fontName": "Microsoft YaHei"
+         },
+         "elements": [
+           {
+             "id": "text_statement",
+             "type": "text",
+             "left": 60,
+             "top": 250,
+             "width": 880,
+             "height": 49,
+             "rotate": 0,
+             "content": "<p style=\"font-size:18px;\">此课件未采用 OpenMAIC 生成器生成</p>",
+             "defaultFontName": "Microsoft YaHei",
+             "defaultColor": "#888888"
+           }
+         ]
+       }
+     }
+   }
+   ```
+
+   声明页不需要 `actions`——没有动作的场景会得到一个合成停留拍，正好停在
+   声明上。`order` 换成实际值；`theme` 的四项与全篇各页保持一致。
+
+3. 声明页同样要走全套检查：`draft_validate` + `draft_layout`，
+   并且在 `scene_normalize_ids` **之后**再加页的话要重跑一次归一化
+   （或先加页、再统一归一化，顺序上是后者更省事）。
+4. 交付说明里提一句"已按你的要求加了/没加出处声明"，让用户知道最终状态。
+
+用户若想要更轻的形式（比如只在最后一页角落加一行小字），照做即可——
+但那种做法必须额外过 `draft_layout` 的压盖检查，且要征得用户对位置的认可。
 
 ### 结构之外的四类缺陷
 
