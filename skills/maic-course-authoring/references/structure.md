@@ -218,6 +218,19 @@ interface QuizQuestion {
 | `widget_highlight` / `widget_annotation` / `widget_reveal` | `id` `type` `target` |
 | `widget_setState` | `id` `type` `state` |
 
+`widget_*` 动作作用于 **interactive 场景**，`target` 是**该场景 HTML 里的 CSS 选择器**
+（官方 CPR 课件里是 `#stat-depth`、`#main-btn` 这类），`content` 是讲解词；
+`widget_setState` 的 `state` 是一个变量对象（如 `{"depth": 6, "frequency": 100}`），
+会直接改写模拟器的变量。所以写 interactive 页时，要在 HTML 里给需要讲解的元素
+**显式起 id / class**，动作才能指得到。
+
+### 形状元素的归一化坐标技巧
+
+`viewBox` + `path` 描述的是相对坐标。官方导出的课件里，简单矩形常用 **`[1, 1]` 的
+viewBox** 搭配 `M 0 0 L 1 0 L 1 1 L 0 1 Z`——形状的实际尺寸完全由
+`left/top/width/height` 决定。这比按真实像素写 viewBox 更简洁，也更好复用。
+需要圆角、斜角等复杂轮廓时才写真实比例的 viewBox。
+
 `wb_draw_line` 的定位字段是 `startX`/`startY`/`endX`/`endY`，
 `widget_*` 系列的定位字段是 `target`。
 

@@ -147,9 +147,60 @@ media/asset-1.poster.png       ← 可选，视频封面（与视频同序号）
 补充规则：
 
 - `meta.missing: true` 的条目会被跳过（导出时抓不到字节的资源会这样标记）。
+  **官方示范课件 CPR 的 52 条音频全部是 `missing: true` 且包内没有字节**——
+  这是格式允许的状态，导入后这些旁白不会发声。自产课件不要走到这一步：
+  要么给字节，要么删掉 `audioRef`，不要交付一门"没有声音却以为有"的课。
 - `sourceRef` 缺失时会从 ZIP 路径推导（去掉 `audio/` 前缀、去掉扩展名）。
 - 视频封面：按 `media/asset-N.poster.<ext>` 的兄弟路径查找。
 - 同一个 `sourceRef` 出现多次时，字典序靠前的 ZIP 路径获胜。
+
+### `sourceRef` 的两种形态（官方示范课件用的是第二种）
+
+| 形态 | `sourceRef` 的值 | 元素 `src` 的值 | 出现于 |
+| --- | --- | --- | --- |
+| 自洽简并 | ZIP 内路径（`media/asset-1.png`） | 同一字符串 | 本仓库示例 |
+| 资产库 ID | `ast_09r55bkxjd6tc0y38m0bv4j030` | 同一资产 ID | 官方导出的课件 |
+
+两者导入后都能解析（导入按 `sourceRef → 新资产 id` 建映射，再回写 `src`）。
+自产课件用第一种最省事；从 OpenMAIC 导出的课件是第二种。
+**校验时以"元素 `src` 是否落在 `sourceRef` 集合里"为准**，两种形态都合法。
+
+### `generated` 媒体类型与 `prompt`
+
+`mediaIndex` 条目 `type` 可以是 `generated`（AI 生成图/视频），此时条目里带一个
+**`prompt` 字段**记录生成时的提示词。这是有价值的溯源信息：配图与正文不符时，
+能看出当初想生成什么。自产课件若引用外部生成服务，建议同样把提示词记进去。
+
+### 智能体的 TTS 音色字段
+
+`agents[]` 条目可选 `voiceConfig` 与 `voiceDesign`（官方 CPR 课件在用）：
+
+```json
+{
+  "name": "李教授",
+  "role": "teacher",
+  "persona": "…",
+  "voiceConfig": { "voiceId": "dylan", "providerId": "qwen3-tts" },
+  "voiceDesign": {
+    "texture": "deep warm authoritative",
+    "delivery": "calm measured reassuring",
+    "identity": "middle-aged male teacher"
+  }
+}
+```
+
+`agents` 整个数组可以省略（官方 Python 课件就没有 `agents`）；
+但一旦用了 `discussion` / 多智能体对白，就需要它。
+
+### `stage.language` 是"语言指令"，不是 ISO 代码
+
+官方 CPR 课件里这个字段是一整段指令：
+
+> 全程使用中文授课，涉及专业术语（如心肺复苏、AED）时需用中文表述并提供英文对照
+> （CPR、AED）。面向普通公众，语言应通俗易懂，重要操作要点需反复强调。
+
+它会被拼进生成提示词（映射到 `stage.languageDirective`）。所以这里写的应当是
+**对语气、术语对照、受众的具体要求**，而不是 `"zh-CN"` 这种代码。
 
 ## 硬规则
 

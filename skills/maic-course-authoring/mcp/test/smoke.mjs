@@ -427,11 +427,6 @@ try {
       (m) => (m.scenes[0].actions[1].elementId = 'nope'),
       /指向的元素 "nope" 在本页不存在/,
     ],
-    [
-      '元素 id 全篇重复（跨页）',
-      (m) => { m.scenes[1].content.canvas = clone(m.scenes[0].content.canvas); },
-      /全篇重复/,
-    ],
   ];
   for (const [label, mutate, pattern] of cases) {
     const m = buildManifest();
@@ -611,7 +606,14 @@ try {
     ],
   };
   const dupBefore = await client.call('draft_validate', { manifest: dupManifest });
-  assert(isError(dupBefore) && /全篇重复/.test(toolText(dupBefore)), '归一前：id 全篇重复被抓到');
+  assert(
+    isError(dupBefore) && /在本页重复/.test(toolText(dupBefore)),
+    '归一前：同页 id 重复被判为错误',
+  );
+  assert(
+    /跨页重复/.test(toolText(dupBefore)),
+    '跨页 id 重复降级为警告（与官方示范课件行为一致）',
+  );
 
   const norm1 = await client.call('scene_normalize_ids', { manifest: dupManifest });
   const norm1Text = toolText(norm1);

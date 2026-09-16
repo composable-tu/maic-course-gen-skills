@@ -1,30 +1,39 @@
 {
   "formatVersion": 1,
-  "exportedAt": "2026-09-15T00:00:00.000Z",
+  "exportedAt": "2026-09-16T00:00:00.000Z",
   "stage": {
     "name": "完整课程：水的三相点",
-    "description": "四类场景（slide / quiz / interactive）+ 讲解与白板动作 + 双智能体 + 媒体索引，覆盖 .maic.zip 的主要能力。",
-    "language": "zh-CN",
-    "style": "clean",
-    "createdAt": 1757894400000,
-    "updatedAt": 1757894400000
+    "description": "三类场景（slide / quiz / interactive）+ 讲解与白板动作 + 双智能体 + 媒体索引，覆盖 .maic.zip 的主要能力。",
+    "language": "全程使用中文授课。涉及专业术语（如三相点、饱和蒸气压、开尔文温标）时给出中文表述并附英文对照（triple point、vapour pressure、Kelvin）。面向初学物理的学生，语言应通俗，关键数值需反复强调。",
+    "style": "professional",
+    "createdAt": 1757980800000,
+    "updatedAt": 1757980800000
   },
   "agents": [
     {
       "name": "张老师",
       "role": "teacher",
       "persona": "严谨，喜欢用具体数字说明问题，会主动请学生复述关键数值。",
-      "avatar": "teacher-1",
+      "avatar": "/avatars/teacher.png",
       "color": "#4F8EF7",
-      "priority": 1
+      "priority": 10,
+      "voiceConfig": {
+        "voiceId": "dylan",
+        "providerId": "qwen3-tts"
+      },
+      "voiceDesign": {
+        "texture": "calm precise",
+        "delivery": "measured, repeats key numbers",
+        "identity": "middle-aged physics teacher"
+      }
     },
     {
       "name": "小林",
       "role": "student",
       "persona": "爱提问，常把三相点和冰点搞混，需要被纠正。",
-      "avatar": "student-1",
+      "avatar": "/avatars/student-1.png",
       "color": "#FFB347",
-      "priority": 2
+      "priority": 20
     }
   ],
   "scenes": [
@@ -34,19 +43,27 @@
       "order": 1,
       "content": {
         "type": "slide",
+        "schemaVersion": 1,
         "canvas": {
           "id": "canvas-1",
           "viewportSize": 1000,
           "viewportRatio": 0.5625,
           "theme": {
             "backgroundColor": "#FFFFFF",
-            "themeColors": ["#4F8EF7", "#333333"],
+            "themeColors": [
+              "#4F8EF7",
+              "#333333"
+            ],
             "fontColor": "#333333",
             "fontName": "Microsoft YaHei"
           },
+          "background": {
+            "type": "solid",
+            "color": "#FFFFFF"
+          },
           "elements": [
             {
-              "id": "text_title",
+              "id": "p01_text_title",
               "type": "text",
               "left": 60,
               "top": 60,
@@ -58,7 +75,7 @@
               "defaultColor": "#333333"
             },
             {
-              "id": "text_definition",
+              "id": "p01_text_definition",
               "type": "text",
               "left": 60,
               "top": 170,
@@ -70,20 +87,23 @@
               "defaultColor": "#333333"
             },
             {
-              "id": "shape_divider",
+              "id": "p01_shape_divider",
               "type": "shape",
               "left": 60,
               "top": 330,
               "width": 880,
               "height": 3,
               "rotate": 0,
-              "viewBox": [1000, 1000],
-              "path": "M 0 0 L 1000 0 L 1000 1000 L 0 1000 Z",
+              "viewBox": [
+                1,
+                1
+              ],
+              "path": "M 0 0 L 1 0 L 1 1 L 0 1 Z",
               "fill": "#CCCCCC",
               "fixedRatio": false
             },
             {
-              "id": "text_history",
+              "id": "p01_text_history",
               "type": "text",
               "left": 60,
               "top": 360,
@@ -98,11 +118,29 @@
         }
       },
       "actions": [
-        { "id": "a1", "type": "speech", "text": "我们先看三相点的定义：气、液、固三态共存的唯一温度和压力组合。", "audioRef": "audio/audio-1.mp3" },
-        { "id": "a2", "type": "spotlight", "elementId": "text_definition" },
-        { "id": "a3", "type": "speech", "text": "温度是 273.16 K，压力是 611.657 Pa。" },
         {
-          "id": "a4",
+          "id": "p01_a1",
+          "type": "speech",
+          "text": "我们先看三相点的定义：气、液、固三态共存的唯一温度和压力组合。",
+          "audioRef": "audio/audio-1.mp3"
+        },
+        {
+          "id": "p01_a2",
+          "type": "spotlight",
+          "elementId": "p01_text_definition"
+        },
+        {
+          "id": "p01_a3",
+          "type": "speech",
+          "text": "温度是 273.16 K，压力是 611.657 Pa。这两个数字请记牢。"
+        },
+        {
+          "id": "p01_a4",
+          "type": "laser",
+          "elementId": "p01_text_history"
+        },
+        {
+          "id": "p01_a5",
           "type": "discussion",
           "topic": "小林，三相点和冰点一样吗？说说你的理解。",
           "agentIndex": 1
@@ -117,21 +155,32 @@
         "type": "quiz",
         "questions": [
           {
-            "id": "q1",
+            "id": "p02_q1",
             "type": "single",
             "question": "水的三相点温度是多少？",
             "options": [
-              { "label": "273.16 K", "value": "A" },
-              { "label": "273.15 K", "value": "B" },
-              { "label": "373.13 K", "value": "C" }
+              {
+                "label": "273.16 K",
+                "value": "A"
+              },
+              {
+                "label": "273.15 K",
+                "value": "B"
+              },
+              {
+                "label": "373.13 K",
+                "value": "C"
+              }
             ],
-            "answer": ["A"],
+            "answer": [
+              "A"
+            ],
             "analysis": "三相点是 273.16 K；273.15 K 是标准大气压下的冰点，两者相差 0.01 K。",
             "hasAnswer": true,
             "points": 1
           },
           {
-            "id": "q2",
+            "id": "p02_q2",
             "type": "short_answer",
             "question": "为什么 2019 年 SI 修订后，三相点不再用于定义开尔文？请用一两句话说明。",
             "analysis": "修订后开尔文由玻尔兹曼常数的固定数值定义，不再依赖任何物质的性质；三相点仍是重要的固定点。",
@@ -140,7 +189,13 @@
           }
         ]
       },
-      "actions": [{ "id": "a1", "type": "speech", "text": "来做两道题，检查一下刚才的要点。" }]
+      "actions": [
+        {
+          "id": "p02_a1",
+          "type": "speech",
+          "text": "来做两道题，检查一下刚才的要点。"
+        }
+      ]
     },
     {
       "type": "interactive",
@@ -148,17 +203,88 @@
       "order": 3,
       "content": {
         "type": "interactive",
-        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:system-ui;margin:24px;background:#fff;color:#333}input[type=range]{width:100%}#state{margin-top:16px;padding:12px;border-radius:8px;background:#eef4fb}</style></head><body><h3>调节压力，观察水的相态（温度固定在 0.01 °C）</h3><input id=\"p\" type=\"range\" min=\"100\" max=\"2000\" value=\"611\" step=\"1\"><p>压力：<b id=\"pv\">611</b> Pa</p><div id=\"state\">—</div><script>const P_TRIPLE=611.657;const p=document.getElementById('p'),pv=document.getElementById('pv'),st=document.getElementById('state');function upd(){const v=+p.value;pv.textContent=v;st.textContent=v<P_TRIPLE?'气态（低于三相点压力，液态不存在）':'气液固三相共存或液态（达到/超过三相点压力）';}p.addEventListener('input',upd);upd();</script></body></html>",
+        "url": "",
+        "html": "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:system-ui;margin:24px;background:#fff;color:#333}input[type=range]{width:100%}#state{margin-top:16px;padding:12px;border-radius:8px;background:#eef4fb}.stat{display:inline-block;margin-right:24px;padding:8px 12px;border-radius:6px;background:#f3f4f6}</style></head><body><h3>调节压力，观察水的相态（温度固定在 0.01 °C）</h3><input id=\"pressure\" type=\"range\" min=\"100\" max=\"2000\" value=\"611\" step=\"1\"><p>压力：<b id=\"pressure-value\">611</b> Pa</p><div id=\"state\">—</div><span class=\"stat\" id=\"stat-pressure\">压力读数</span><span class=\"stat\" id=\"stat-phase\">相态判定</span><button id=\"apply-preset\">恢复三相点压力</button><script>const P_TRIPLE=611.657;const p=document.getElementById('pressure'),pv=document.getElementById('pressure-value'),st=document.getElementById('state');function upd(){const v=+p.value;pv.textContent=v;st.textContent=v<P_TRIPLE?'气态（低于三相点压力，液态不存在）':'气液固三相共存或液态（达到/超过三相点压力）';}p.addEventListener('input',upd);document.getElementById('apply-preset').addEventListener('click',()=>{p.value=611;upd();});upd();</script></body></html>",
         "widgetType": "simulation",
         "widgetConfig": {
           "type": "simulation",
-          "conceptName": "压力低于三相点压力时液态不存在",
-          "variables": {
-            "pressure": { "min": 100, "max": 2000, "default": 611, "step": 1 }
-          }
+          "concept": "pressure_vs_phase",
+          "description": "压力-相态交互模拟器：在 0.01 °C 下调节压力，观察低于三相点压力时液态消失。",
+          "variables": [
+            {
+              "name": "pressure",
+              "min": 100,
+              "max": 2000,
+              "default": 611,
+              "step": 1,
+              "unit": "Pa",
+              "label": "环境压力"
+            }
+          ],
+          "presets": [
+            {
+              "name": "三相点压力",
+              "variables": {
+                "pressure": 611
+              }
+            },
+            {
+              "name": "远低于三相点",
+              "variables": {
+                "pressure": 200
+              }
+            },
+            {
+              "name": "标准大气压",
+              "variables": {
+                "pressure": 101325
+              }
+            }
+          ]
         }
       },
-      "actions": [{ "id": "a1", "type": "speech", "text": "拖动滑块改变压力，看看液态在什么时候才会出现。" }]
+      "actions": [
+        {
+          "id": "p03_a1",
+          "type": "speech",
+          "text": "拖动滑块改变压力，看看液态在什么时候才会出现。",
+          "audioRef": "audio/audio-2.mp3"
+        },
+        {
+          "id": "p03_a2",
+          "type": "widget_setState",
+          "state": {
+            "pressure": 611
+          },
+          "content": "先把压力设回三相点压力，让三态共存。"
+        },
+        {
+          "id": "p03_a3",
+          "type": "widget_highlight",
+          "target": "#stat-pressure",
+          "content": "这是当前的压力读数。"
+        },
+        {
+          "id": "p03_a4",
+          "type": "widget_highlight",
+          "target": "#stat-phase",
+          "content": "这里会实时显示相态判定结果。"
+        },
+        {
+          "id": "p03_a5",
+          "type": "widget_setState",
+          "state": {
+            "pressure": 200
+          },
+          "content": "把压力降到 200 Pa——低于三相点压力，液态消失了。"
+        },
+        {
+          "id": "p03_a6",
+          "type": "widget_highlight",
+          "target": "#apply-preset",
+          "content": "随时可以点这里恢复三相点压力。"
+        }
+      ]
     },
     {
       "type": "slide",
@@ -166,19 +292,23 @@
       "order": 4,
       "content": {
         "type": "slide",
+        "schemaVersion": 1,
         "canvas": {
           "id": "canvas-whiteboard",
           "viewportSize": 1000,
           "viewportRatio": 0.5625,
           "theme": {
             "backgroundColor": "#FFFFFF",
-            "themeColors": ["#0F6E56", "#333333"],
+            "themeColors": [
+              "#0F6E56",
+              "#333333"
+            ],
             "fontColor": "#333333",
             "fontName": "Microsoft YaHei"
           },
           "elements": [
             {
-              "id": "text_head",
+              "id": "p04_text_head",
               "type": "text",
               "left": 60,
               "top": 60,
@@ -199,37 +329,58 @@
           "viewportRatio": 0.5625,
           "theme": {
             "backgroundColor": "#FFFFFF",
-            "themeColors": ["#0F6E56", "#333333"],
+            "themeColors": [
+              "#0F6E56",
+              "#333333"
+            ],
             "fontColor": "#333333",
             "fontName": "Microsoft YaHei"
           },
           "elements": [
             {
-              "id": "wb_line_melt",
+              "id": "p04_wb1_wb_line_melt",
               "type": "line",
               "left": 200,
               "top": 120,
               "width": 260,
-              "start": [0, 0],
-              "end": [260, 160],
-              "points": ["", ""],
+              "start": [
+                0,
+                0
+              ],
+              "end": [
+                260,
+                160
+              ],
+              "points": [
+                "",
+                ""
+              ],
               "style": "solid",
               "color": "#0F6E56"
             },
             {
-              "id": "wb_line_vapor",
+              "id": "p04_wb1_wb_line_vapor",
               "type": "line",
               "left": 200,
               "top": 280,
               "width": 400,
-              "start": [0, 0],
-              "end": [400, -180],
-              "points": ["", "arrow"],
+              "start": [
+                0,
+                0
+              ],
+              "end": [
+                400,
+                -180
+              ],
+              "points": [
+                "",
+                "arrow"
+              ],
               "style": "solid",
               "color": "#185FA5"
             },
             {
-              "id": "wb_text_triple",
+              "id": "p04_wb1_wb_text_triple",
               "type": "text",
               "left": 180,
               "top": 300,
@@ -244,16 +395,26 @@
         }
       ],
       "actions": [
-        { "id": "a1", "type": "wb_open" },
         {
-          "id": "a2",
+          "id": "p04_a1",
+          "type": "wb_open"
+        },
+        {
+          "id": "p04_a2",
           "type": "wb_draw_text",
           "content": "三相点：273.16 K / 611.657 Pa",
           "x": 0.2,
           "y": 0.55
         },
-        { "id": "a3", "type": "speech", "text": "三条相界在这一点交汇。" },
-        { "id": "a4", "type": "wb_close" }
+        {
+          "id": "p04_a3",
+          "type": "speech",
+          "text": "三条相界在这一点交汇。"
+        },
+        {
+          "id": "p04_a4",
+          "type": "wb_close"
+        }
       ]
     }
   ],
@@ -264,6 +425,13 @@
       "format": "mp3",
       "mimeType": "audio/mpeg",
       "duration": 4.2
+    },
+    "audio/audio-2.mp3": {
+      "type": "audio",
+      "sourceRef": "audio/audio-2.mp3",
+      "format": "mp3",
+      "mimeType": "audio/mpeg",
+      "duration": 6.8
     }
   }
 }

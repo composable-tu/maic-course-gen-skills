@@ -50,11 +50,17 @@ node $M --pack skills/maic-course-authoring/examples/minimal-course/manifest.jso
 
 ### full-course — 完整能力拼装
 
-- 双智能体（teacher + student），`discussion` 动作用 `agentIndex` 指向学生
-- `interactive` 场景：内嵌 `html` + `widgetType` + `widgetConfig`（simulation）
+- `stage.language` 写成**语言指令段落**（语气、术语对照、受众），不是 `"zh-CN"` 这种代码
+- 双智能体，teacher 带 `voiceConfig` / `voiceDesign`（TTS 音色），`discussion` 动作用
+  `agentIndex` 指向学生
+- `interactive` 场景：内嵌 `html` + `widgetType` + `widgetConfig`（simulation，
+  形状为 `concept` / `variables[]` / `presets[]` / `description`）
+- `widget_setState`（直接改写模拟器变量）与 `widget_highlight`（`target` 是 HTML 里的
+  **CSS 选择器**，所以 HTML 里给讲解点显式起了 id）
+- `laser` 动作、slide 级 `background`、slide content 的 `schemaVersion: 1`
 - `whiteboards` 字段：一块白板页，内含 `line` 与文字元素
-- `wb_open` / `wb_draw_text` / `wb_close` 白板动作序列
 - `quiz` 同时含 `single`（自动判分）与 `short_answer`（`hasAnswer: false`）
+- 已跑过 `scene_normalize_ids`：全部 id 带 `p{页码}_` 前缀，全篇唯一
 
 ## 注意事项
 
@@ -64,8 +70,25 @@ node $M --pack skills/maic-course-authoring/examples/minimal-course/manifest.jso
   校验与打包都不需要字节；导入后的渲染依赖外网可达。
 - `full-course` 的第 3 页 interactive 用内嵌 `html`。`widgetConfig` 在
   `widget.md`（`references/skills/agent-runtime/stage-dsl/references/`）里有
-  各类型的字段说明。
+  各类型的字段说明；`widget_highlight` 的 `target` 是 HTML 里的 CSS 选择器。
 - **没有 PBL 示例。** `projectV2` 依赖应用侧播种的 canonical 运行时字段
   （`uiPhase`、`status`、空的 `threads`/`submissions` 等），手写极易产生
   渲染异常的 PBL 场景。需要时参考上游 PBL v2 planner 的输出，或
   `references/skills/agent-runtime/stage-dsl/references/pbl.md` 的字段说明。
+
+## 与官方示范课件的差异
+
+官方导出的两个课件（Python 循环对比、CPR 教学）用到了本仓库示例未覆盖的能力，
+值得知道它们的存在：
+
+| 能力 | 官方课件 | 本仓库示例 |
+| --- | --- | --- |
+| `mediaIndex.sourceRef` 用**资产库 ID**（`ast_…`）而非 ZIP 路径 | 是 | 用 ZIP 路径（同样合法） |
+| `generated` 媒体条目带 `prompt`（生成提示词溯源） | 是 | 未使用（不调内部生成器） |
+| 音频条目 `missing: true`（包内无字节） | CPR 全部 52 条 | 未使用（自产课件不应缺字节） |
+| `laser` / `play_video` 动作 | Python | full-course 演示了 `laser` |
+| `widget_setState` / `widget_highlight` | CPR | full-course 演示了 |
+| 白板 / PBL / 动画 | 均未使用 | full-course 演示了白板 |
+
+校验器曾在这两个官方课件上发现真实缺陷（CPR 有一处图片引用了未登记的资产 ID，
+会显示骨架屏；Python 有一张表缺 `cellMinHeight`），说明它们也不是格式的完备范本。

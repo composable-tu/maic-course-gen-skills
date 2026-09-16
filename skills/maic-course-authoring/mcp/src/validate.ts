@@ -388,13 +388,17 @@ export function validateManifest(manifest: ManifestLike): ValidateOutcome {
 // ─────────────────────────────────────────────────────────────
 
 /**
- * 上游 schema 只要求 id 是非空字符串，不要求唯一。但渲染层把元素放进同一个
- * 列表里以 id 作 key：同一页两个元素同 id，React 会报重复 key 并反复重渲染。
- * 这在长课程里真实发生过——同一页调了两次同一个版式函数，两批元素 id 从同一
- * 个起点开始，结构校验全绿，渲染却坏掉。
+ * 引用完整性检查。严重度经过校准（用两个官方示范课件核对过）：
  *
- * 所以这里检查：页内唯一、全篇唯一（元素 / 动作 / 题目 / 表格单元格）、
- * 以及 spotlight / laser 的 elementId 必须能解析到同场景元素。
+ * - **元素 / 动作 / 题目 id 的"页内唯一"是错误**：渲染层把这些元素放进同一个
+ *   列表并以 id 作 key，同页重复会产生重复 key 警告并反复重渲染。
+ *   真实发生过：同一页调用两次同一个版式函数，两批元素 id 从同一个起点开始。
+ * - **跨页重复只是警告**：课件按场景渲染，不同页的元素不会同时挂载；
+ *   官方示范课件也确实跨页复用了 `q1` / `q2` 这类题目 id。
+ *   但全局唯一仍然值得做（便于排查、便于工具改写），官方课件本身就是全局唯一的。
+ * - **spotlight / laser 的目标存在性是错误**：重命名元素后忘记同步动作引用，
+ *   会让聚光灯静默失效。
+ * - **audioRef 必须落在 mediaIndex**：缺了就没有旁白。
  */
 export function validateReferences(manifest: ManifestLike): { errors: Issue[]; warnings: Issue[] } {
   const errors: Issue[] = [];
@@ -405,10 +409,11 @@ export function validateReferences(manifest: ManifestLike): { errors: Issue[]; w
   const noteGlobal = (id: string, order: number, kind: string, path: string): void => {
     const seenAt = globalIds.get(id);
     if (seenAt !== undefined) {
-      errors.push({
+      warnings.push({
         path,
-        message: `${kind} id "${id}" 全篇重复（order ${seenAt} 与 ${order}）。` +
-          '渲染层以 id 作 key，重复会导致重复 key 警告与页面重渲染。用 scene_normalize_ids 归一。',
+        message: `${kind} id "${id}" 跨页重复（order ${seenAt} 与 ${order}）。` +
+          '不同页不会同时渲染，所以这只影响排查与工具改写；' +
+          '建议跑 scene_normalize_ids 归一，官方示范课件本身也是全局唯一的。',
       });
     } else {
       globalIds.set(id, order);
@@ -440,7 +445,7 @@ export function validateReferences(manifest: ManifestLike): { errors: Issue[]; w
           errors.push({
             path: p,
             message: `元素 id "${el.id}" 在本页重复（第 ${pageIds.get(el.id)} 个与第 ${k} 个）。` +
-              '同页两次调用同一个版式函数时会出现这种情况。',
+              '同页两次调用同一个版式函数时会出现这种情况，渲染层会报重复 key。',
           });
         } else {
           pageIds.set(el.id, k);
@@ -468,10 +473,19 @@ export function validateReferences(manifest: ManifestLike): { errors: Issue[]; w
       });
     }
 
+    const actionIds = new Map<string, number>();
     for (const [j, action] of (Array.isArray(scene.actions) ? scene.actions : []).entries()) {
       if (!isObj(action)) continue;
       const p = `${base}/actions/${j}`;
       if (typeof action.id === 'string') {
+        if (actionIds.has(action.id)) {
+          errors.push({
+            path: `${p}/id`,
+            message: `动作 id "${action.id}" 在本页重复。`,
+          });
+        } else {
+          actionIds.set(action.id, j);
+        }
         noteGlobal(action.id, order, '动作', `${p}/id`);
       }
       if (
@@ -488,10 +502,16 @@ export function validateReferences(manifest: ManifestLike): { errors: Issue[]; w
     }
 
     if (isObj(scene.content) && scene.content.type === 'quiz' && Array.isArray(scene.content.questions)) {
+      const questionIds = new Map<string, number>();
       scene.content.questions.forEach((question: Loose, q: number) => {
-        if (isObj(question) && typeof question.id === 'string') {
-          noteGlobal(question.id, order, '题目', `${base}/content/questions/${q}/id`);
+        if (!isObj(question) || typeof question.id !== 'string') return;
+        const p = `${base}/content/questions/${q}/id`;
+        if (questionIds.has(question.id)) {
+          errors.push({ path: p, message: `题目 id "${question.id}" 在本页重复。` });
+        } else {
+          questionIds.set(question.id, q);
         }
+        noteGlobal(question.id, order, '题目', p);
       });
     }
   });
