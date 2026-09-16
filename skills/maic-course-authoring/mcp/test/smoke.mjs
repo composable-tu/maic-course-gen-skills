@@ -325,6 +325,7 @@ try {
   const names = tools.map((t) => t.name).sort();
   const expected = [
     'course_pack_maic_zip',
+    'draft_layout',
     'draft_normalize',
     'draft_validate',
     'dsl_schema_get',
@@ -332,8 +333,9 @@ try {
     'material_read',
     'material_search',
     'scene_clone',
+    'scene_normalize_ids',
   ];
-  assert(tools.length === 8, '工具数量为 8', String(tools.length));
+  assert(tools.length === 10, '工具数量为 10', String(tools.length));
   assert(
     expected.every((n) => names.includes(n)),
     '八个工具齐备',
@@ -413,6 +415,22 @@ try {
       '动作里误用 audioId',
       (m) => (m.scenes[0].actions[0].audioId = 'x'),
       /audioRef/,
+    ],
+    // ── id 唯一性与引用完整性（实战中真实发生过的缺陷）──
+    [
+      '元素 id 页内重复',
+      (m) => { m.scenes[0].content.canvas.elements.push({ ...clone(m.scenes[0].content.canvas.elements[0]) }); },
+      /元素 id "text_title" 在本页重复/,
+    ],
+    [
+      'spotlight 指向不存在的元素',
+      (m) => (m.scenes[0].actions[1].elementId = 'nope'),
+      /指向的元素 "nope" 在本页不存在/,
+    ],
+    [
+      '元素 id 全篇重复（跨页）',
+      (m) => { m.scenes[1].content.canvas = clone(m.scenes[0].content.canvas); },
+      /全篇重复/,
     ],
   ];
   for (const [label, mutate, pattern] of cases) {
@@ -494,9 +512,13 @@ try {
   );
   assert(/audioRef 已移除/.test(cloneText), '并给出了 audioRef 移除的告警');
   assert(
-    inserted.actions[1].type === 'spotlight' && inserted.actions[1].elementId === 'text_points',
-    '未被改写的动作原样保留',
+    inserted.actions[1].type === 'spotlight' && /^p03_text_points$/.test(inserted.actions[1].elementId),
+    '未被改写的动作保留，且 elementId 已改指克隆页的新 id',
+    inserted.actions[1].elementId,
   );
+  const cloneIds = inserted.content.canvas.elements.map((e) => e.id);
+  assert(cloneIds.every((id) => /^p03_/.test(id)), '克隆页 id 已加页前缀');
+  assert(new Set(cloneIds).size === cloneIds.length, '克隆页 id 页内唯一');
 
   // 克隆结果本身必须是合法文档，否则这个工具会把错误往包里带
   const cloneValid = await client.call('draft_validate', { manifest: cloneJson });
@@ -517,7 +539,104 @@ try {
   });
   assert(isError(dupFind) && /出现了 2 次|歧义/.test(toolText(dupFind)), 'find 不唯一时报错');
 
-  console.log('\n[8] course_pack_maic_zip');
+  console.log('\n[8] draft_layout 与 scene_normalize_ids');
+
+  const oob = buildManifest();
+  oob.scenes[0].content.canvas.elements[0].left = 30; // 安全区从 50 起
+  const layout1 = await client.call('draft_layout', { manifest: oob });
+  assert(isError(layout1) && /越出安全区/.test(toolText(layout1)), '越出安全区被抓到');
+
+  const overflow = buildManifest();
+  overflow.scenes[0].content.canvas.elements[1].content =
+    '<p style="font-size:18px;">第一行</p><p style="font-size:18px;">第二行</p>';
+  overflow.scenes[0].content.canvas.elements[1].height = 46; // 两行 18px 需要约 103px
+  const layout2 = await client.call('draft_layout', { manifest: overflow });
+  assert(isError(layout2) && /文本可能溢出/.test(toolText(layout2)), '文本高度不足被抓到');
+
+  const layout3 = await client.call('draft_layout', { manifest: buildManifest() });
+  assert(!isError(layout3), '干净版式不误报', toolText(layout3).split('\n')[0]);
+
+  // id 归一：同页重复 id + spotlight 引用，归一后应全部唯一且引用可达
+  const dupManifest = {
+    stage: { name: 'T', createdAt: 1, updatedAt: 1 },
+    scenes: [
+      {
+        type: 'slide',
+        title: 'P1',
+        order: 1,
+        content: {
+          type: 'slide',
+          canvas: {
+            id: 'c1',
+            viewportSize: 1000,
+            viewportRatio: 0.5625,
+            theme: {
+              backgroundColor: '#FFF',
+              themeColors: ['#000'],
+              fontColor: '#333',
+              fontName: 'Arial',
+            },
+            elements: [
+              { id: 'step', type: 'text', left: 60, top: 60, width: 400, height: 49, rotate: 0,
+                content: '<p style="font-size:18px;">甲</p>', defaultFontName: 'Arial', defaultColor: '#333' },
+              { id: 'step', type: 'text', left: 60, top: 200, width: 400, height: 49, rotate: 0,
+                content: '<p style="font-size:18px;">乙</p>', defaultFontName: 'Arial', defaultColor: '#333' },
+            ],
+          },
+        },
+      },
+      {
+        type: 'slide',
+        title: 'P2',
+        order: 2,
+        content: {
+          type: 'slide',
+          canvas: {
+            id: 'c2',
+            viewportSize: 1000,
+            viewportRatio: 0.5625,
+            theme: {
+              backgroundColor: '#FFF',
+              themeColors: ['#000'],
+              fontColor: '#333',
+              fontName: 'Arial',
+            },
+            elements: [
+              { id: 'step', type: 'text', left: 60, top: 60, width: 400, height: 49, rotate: 0,
+                content: '<p style="font-size:18px;">丙</p>', defaultFontName: 'Arial', defaultColor: '#333' },
+            ],
+          },
+        },
+      },
+    ],
+  };
+  const dupBefore = await client.call('draft_validate', { manifest: dupManifest });
+  assert(isError(dupBefore) && /全篇重复/.test(toolText(dupBefore)), '归一前：id 全篇重复被抓到');
+
+  const norm1 = await client.call('scene_normalize_ids', { manifest: dupManifest });
+  const norm1Text = toolText(norm1);
+  const norm1Json = JSON.parse(
+    norm1Text.slice(norm1Text.indexOf('```json') + 7, norm1Text.lastIndexOf('```')),
+  );
+  const ids = norm1Json.scenes.flatMap((s) => s.content.canvas.elements.map((e) => e.id));
+  assert(new Set(ids).size === ids.length, '归一后：全篇 id 唯一', ids.join(', '));
+  assert(
+    ids.every((id) => /^p\d{2}_/.test(id)),
+    '归一后：全部带页前缀',
+  );
+  assert(ids.includes('p01_step_2'), '同页重复的 id 追加序号');
+
+  const norm2 = await client.call('scene_normalize_ids', { manifest: norm1Json });
+  const norm2Text = toolText(norm2);
+  const norm2Json = JSON.parse(
+    norm2Text.slice(norm2Text.indexOf('```json') + 7, norm2Text.lastIndexOf('```')),
+  );
+  assert(
+    JSON.stringify(norm2Json.scenes) === JSON.stringify(norm1Json.scenes),
+    '归一化幂等：再跑一次不再改动',
+  );
+
+  console.log('\n[9] course_pack_maic_zip');
   const noBytes = await client.call('course_pack_maic_zip', {
     manifest: buildManifest(),
     outputPath: zipPath,
@@ -579,8 +698,8 @@ try {
   const isolatedRun = spawnSync(process.execPath, [isolatedServer, '--tools'], { encoding: 'utf8' });
   assert(isolatedRun.status === 0, '拷到空目录后仍能运行', `exit=${isolatedRun.status}`);
   assert(
-    /8 个工具/.test(isolatedRun.stdout),
-    '空目录中仍报告 8 个工具',
+    /10 个工具/.test(isolatedRun.stdout),
+    '空目录中仍报告 10 个工具',
   );
   const bundle = readFileSync(SERVER, 'utf8');
   const externalImports = [...bundle.matchAll(/from\s+"([^"]+)"/g)]

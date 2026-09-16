@@ -369,10 +369,11 @@ export function validateMedia(manifest: ManifestLike): { errors: Issue[]; warnin
 export function validateManifest(manifest: ManifestLike): ValidateOutcome {
   const structure = validateManifestStructure(manifest);
   const media = validateMedia(manifest);
-  const warnings = [...structure.warnings, ...media.warnings];
+  const references = validateReferences(manifest);
+  const warnings = [...structure.warnings, ...media.warnings, ...references.warnings];
   const versionNotice = dslVersionNotice();
   if (versionNotice) warnings.push(versionNotice);
-  const errors = [...structure.errors, ...media.errors];
+  const errors = [...structure.errors, ...media.errors, ...references.errors];
   return {
     valid: errors.length === 0,
     errors,
@@ -380,6 +381,122 @@ export function validateManifest(manifest: ManifestLike): ValidateOutcome {
     dslVersion: DSL_VERSION,
     validator: structure.validator,
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// 引用完整性：id 唯一性与 spotlight 目标
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * 上游 schema 只要求 id 是非空字符串，不要求唯一。但渲染层把元素放进同一个
+ * 列表里以 id 作 key：同一页两个元素同 id，React 会报重复 key 并反复重渲染。
+ * 这在长课程里真实发生过——同一页调了两次同一个版式函数，两批元素 id 从同一
+ * 个起点开始，结构校验全绿，渲染却坏掉。
+ *
+ * 所以这里检查：页内唯一、全篇唯一（元素 / 动作 / 题目 / 表格单元格）、
+ * 以及 spotlight / laser 的 elementId 必须能解析到同场景元素。
+ */
+export function validateReferences(manifest: ManifestLike): { errors: Issue[]; warnings: Issue[] } {
+  const errors: Issue[] = [];
+  const warnings: Issue[] = [];
+  const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+
+  const globalIds = new Map<string, number>();
+  const noteGlobal = (id: string, order: number, kind: string, path: string): void => {
+    const seenAt = globalIds.get(id);
+    if (seenAt !== undefined) {
+      errors.push({
+        path,
+        message: `${kind} id "${id}" 全篇重复（order ${seenAt} 与 ${order}）。` +
+          '渲染层以 id 作 key，重复会导致重复 key 警告与页面重渲染。用 scene_normalize_ids 归一。',
+      });
+    } else {
+      globalIds.set(id, order);
+    }
+  };
+
+  scenes.forEach((scene, i) => {
+    if (!isObj(scene)) return;
+    const order = typeof scene.order === 'number' ? scene.order : i + 1;
+    const base = `/scenes/${i}`;
+
+    const groups: { base: string; elements: unknown }[] = [
+      { base: `${base}/content/canvas/elements`, elements: scene.content?.canvas?.elements },
+    ];
+    if (Array.isArray(scene.whiteboards)) {
+      scene.whiteboards.forEach((board: Loose, bi: number) => {
+        groups.push({ base: `${base}/whiteboards/${bi}/elements`, elements: board?.elements });
+      });
+    }
+
+    const sceneIds = new Set<string>();
+    for (const group of groups) {
+      if (!Array.isArray(group.elements)) continue;
+      const pageIds = new Map<string, number>();
+      group.elements.forEach((el: Loose, k: number) => {
+        if (!isObj(el) || typeof el.id !== 'string') return;
+        const p = `${group.base}/${k}/id`;
+        if (pageIds.has(el.id)) {
+          errors.push({
+            path: p,
+            message: `元素 id "${el.id}" 在本页重复（第 ${pageIds.get(el.id)} 个与第 ${k} 个）。` +
+              '同页两次调用同一个版式函数时会出现这种情况。',
+          });
+        } else {
+          pageIds.set(el.id, k);
+        }
+        noteGlobal(el.id, order, '元素', p);
+        sceneIds.add(el.id);
+
+        if (el.type === 'table' && Array.isArray(el.data)) {
+          const cellIds = new Map<string, string>();
+          (el.data as unknown[]).forEach((row: unknown, r: number) => {
+            if (!Array.isArray(row)) return;
+            (row as Loose[]).forEach((cell: Loose, c: number) => {
+              if (!isObj(cell) || typeof cell.id !== 'string') return;
+              if (cellIds.has(cell.id)) {
+                errors.push({
+                  path: `${p}`,
+                  message: `表格单元格 id "${cell.id}" 重复（r${r}c${c} 与第 ${cellIds.get(cell.id)} 处）。`,
+                });
+              } else {
+                cellIds.set(cell.id, `${r},${c}`);
+              }
+            });
+          });
+        }
+      });
+    }
+
+    for (const [j, action] of (Array.isArray(scene.actions) ? scene.actions : []).entries()) {
+      if (!isObj(action)) continue;
+      const p = `${base}/actions/${j}`;
+      if (typeof action.id === 'string') {
+        noteGlobal(action.id, order, '动作', `${p}/id`);
+      }
+      if (
+        (action.type === 'spotlight' || action.type === 'laser') &&
+        typeof action.elementId === 'string' &&
+        !sceneIds.has(action.elementId)
+      ) {
+        errors.push({
+          path: `${p}/elementId`,
+          message: `${action.type} 指向的元素 "${action.elementId}" 在本页不存在。` +
+            '重命名元素后忘记同步动作引用是最常见的原因。',
+        });
+      }
+    }
+
+    if (isObj(scene.content) && scene.content.type === 'quiz' && Array.isArray(scene.content.questions)) {
+      scene.content.questions.forEach((question: Loose, q: number) => {
+        if (isObj(question) && typeof question.id === 'string') {
+          noteGlobal(question.id, order, '题目', `${base}/content/questions/${q}/id`);
+        }
+      });
+    }
+  });
+
+  return { errors, warnings };
 }
 
 // ─────────────────────────────────────────────────────────────

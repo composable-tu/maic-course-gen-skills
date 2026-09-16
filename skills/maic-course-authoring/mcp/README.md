@@ -101,7 +101,25 @@ PDF / DOCX / PPTX 需要先转成文本再放进去。
 - `replacements: [{ find, replace }]`，每个 `find` 必须在该页内**恰好出现一次**，
   否则报错要求扩大锚点（对齐上游 `str_replace` 语义）。
 - 某条旁白的文字被改写时，其 `audioRef` 会自动移除并告警——原音频已与新文字不匹配。
-- `id` / `mediaRef` 等被继承，媒体引用不用重写。
+- 克隆页的元素 / 动作 / 表格单元格 id 自动加 `p{页码}_` 前缀并去重，
+  `spotlight` / `laser` 引用同步改写——否则克隆页与源页必然撞 id。
+
+### 版式与 id
+
+这两个检查来自一次 45 页真实课件的实战：结构校验全绿的课件，仍可能因为
+**同页 id 重复**（同一版式函数被调用两次）在渲染层报重复 key，或者存在
+文本溢出、元素压盖。
+
+`draft_layout` —— 越界（安全区 50–950 × 50–512.5）、文本盒高度不足、
+单行超过 75% 行容量的折行风险、内容元素互相压盖、文字被后绘制的形状盖住。
+全部是启发式风险提示，报出来后逐条判断。
+
+`scene_normalize_ids` —— 给全部场景的元素 / 动作 / 题目 / 表格单元格 id 加
+`p{页码}_` 前缀并保证页内唯一，`spotlight` / `laser` 的 `elementId` 同步改指。
+幂等：已带前缀的页面会跳过。**长课程交付前必跑一次。**
+
+`draft_validate` 现在也检查 id 唯一性（页内 + 全篇）与引用完整性
+（`spotlight` / `laser` 的目标必须存在于同场景）。
 
 ### 打包
 
@@ -130,9 +148,10 @@ unzip -p course.maic.zip manifest.json | head -40
 ```text
 src/
 ├── server.ts          入口：MCP stdio 传输 + CLI
-├── tools.ts           8 个工具的定义与实现
+├── tools.ts           10 个工具的定义与实现
 ├── validate.ts        校验与归一化流水线
 ├── validate-schema.ts 上游 JSON Schema 的定向校验（判别式分派）
+├── layout.ts          版式检查（越界/溢出/压盖）与 id 归一
 ├── materials.ts       材料库的只读访问
 ├── contract.ts        契约常量（不可从 schema 推导的那部分）
 └── zip.ts             最小 ZIP 读写（写入 + 读取）

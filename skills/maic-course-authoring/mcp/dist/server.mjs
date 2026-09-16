@@ -224,10 +224,10 @@ const ACTION_REQUIRED_FIELDS = {
 };
 function matchesKind(value, kind) {
 	if (kind === "array") return Array.isArray(value);
-	if (kind === "object") return isObject$2(value);
+	if (kind === "object") return isObject$3(value);
 	return typeof value === kind;
 }
-function isObject$2(v) {
+function isObject$3(v) {
 	return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 function reqString(o, key, path, errors) {
@@ -249,7 +249,7 @@ function done(errors) {
 	};
 }
 function checkAction(doc, path, errors) {
-	if (!isObject$2(doc)) {
+	if (!isObject$3(doc)) {
 		errors.push({
 			path: path || "/",
 			message: "action must be an object"
@@ -277,7 +277,7 @@ function checkAction(doc, path, errors) {
 	}
 }
 function checkInteractiveContent(doc, path, errors) {
-	if (!isObject$2(doc)) {
+	if (!isObject$3(doc)) {
 		errors.push({
 			path: path || "/",
 			message: "interactive content must be an object"
@@ -305,7 +305,7 @@ function checkInteractiveContent(doc, path, errors) {
 		message: `unknown widget type: ${JSON.stringify(doc.widgetType)}`
 	});
 	if (doc.widgetConfig !== void 0) {
-		if (!isObject$2(doc.widgetConfig)) errors.push({
+		if (!isObject$3(doc.widgetConfig)) errors.push({
 			path: `${path}/widgetConfig`,
 			message: "`widgetConfig` must be an object when present"
 		});
@@ -316,7 +316,7 @@ function checkInteractiveContent(doc, path, errors) {
 	}
 }
 function checkPBLContent(doc, path, errors) {
-	if (!isObject$2(doc)) {
+	if (!isObject$3(doc)) {
 		errors.push({
 			path: path || "/",
 			message: "pbl content must be an object"
@@ -331,13 +331,13 @@ function checkPBLContent(doc, path, errors) {
 		path: `${path}/projectV2`,
 		message: "`projectV2` must be a structurally valid PBL project when present"
 	});
-	if (doc.projectConfig !== void 0 && !isObject$2(doc.projectConfig)) errors.push({
+	if (doc.projectConfig !== void 0 && !isObject$3(doc.projectConfig)) errors.push({
 		path: `${path}/projectConfig`,
 		message: "`projectConfig` must be an object when present"
 	});
 }
 function checkScene(doc, path, errors) {
-	if (!isObject$2(doc)) {
+	if (!isObject$3(doc)) {
 		errors.push({
 			path: path || "/",
 			message: "scene must be an object"
@@ -354,7 +354,7 @@ function checkScene(doc, path, errors) {
 		message: `unknown scene type: ${JSON.stringify(t)}`
 	});
 	const content = doc.content;
-	if (!isObject$2(content)) errors.push({
+	if (!isObject$3(content)) errors.push({
 		path: `${path}/content`,
 		message: "scene `content` must be an object"
 	});
@@ -363,7 +363,7 @@ function checkScene(doc, path, errors) {
 			path: `${path}/content/type`,
 			message: `content type ${JSON.stringify(content.type)} does not match scene type ${JSON.stringify(t)}`
 		});
-		else if (t === "slide" && !isObject$2(content.canvas)) errors.push({
+		else if (t === "slide" && !isObject$3(content.canvas)) errors.push({
 			path: `${path}/content/canvas`,
 			message: "slide content requires an object `canvas`"
 		});
@@ -385,7 +385,7 @@ function checkScene(doc, path, errors) {
 /** Validate a {@link Stage} aggregate (course metadata; scenes are separate). */
 function validateStage(doc) {
 	const errors = [];
-	if (!isObject$2(doc)) return {
+	if (!isObject$3(doc)) return {
 		valid: false,
 		errors: [{
 			path: "/",
@@ -450,7 +450,7 @@ const LINE_POINT_MARKERS = [
 	"arrow",
 	"dot"
 ];
-function isObject$1(v) {
+function isObject$2(v) {
 	return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 function pblFail(field, expected, value) {
@@ -534,7 +534,7 @@ const PBL_ROLE_TYPES = [
 ];
 function normalizePBLThread(thread, index) {
 	const path = `threads[${index}]`;
-	if (!isObject$1(thread)) pblFail(path, "an object", thread);
+	if (!isObject$2(thread)) pblFail(path, "an object", thread);
 	if (typeof thread.agentId !== "string") pblFail(`${path}.agentId`, "a string", thread.agentId);
 	return {
 		...thread,
@@ -554,7 +554,7 @@ function normalizePBLThread(thread, index) {
 * Pure and idempotent.
 */
 function normalizePBLProject(project) {
-	if (!isObject$1(project)) pblFail("project", "an object", project);
+	if (!isObject$2(project)) pblFail("project", "an object", project);
 	const title = pblRequiredString(project, "title");
 	const description = pblRequiredString(project, "description");
 	const learningObjective = project.learningObjective === void 0 ? void 0 : pblRequiredString(project, "learningObjective");
@@ -568,7 +568,7 @@ function normalizePBLProject(project) {
 	if (!Array.isArray(roles)) pblFail("roles", "an array", roles);
 	roles.forEach((role, roleIndex) => {
 		const rolePath = `roles[${roleIndex}]`;
-		if (!isObject$1(role)) pblFail(rolePath, "an object", role);
+		if (!isObject$2(role)) pblFail(rolePath, "an object", role);
 		pblRequiredString(role, "id", `${rolePath}.id`);
 		pblRequiredEnum(role, "type", PBL_ROLE_TYPES, `${rolePath}.type`);
 		pblRequiredString(role, "name", `${rolePath}.name`);
@@ -576,7 +576,7 @@ function normalizePBLProject(project) {
 	const milestones = project.milestones;
 	if (!Array.isArray(milestones)) pblFail("milestones", "an array", milestones);
 	const milestoneObjects = milestones.map((milestone, milestoneIndex) => {
-		if (!isObject$1(milestone)) pblFail(`milestones[${milestoneIndex}]`, "an object", milestone);
+		if (!isObject$2(milestone)) pblFail(`milestones[${milestoneIndex}]`, "an object", milestone);
 		return milestone;
 	});
 	pblRequireConsistentPresence(milestoneObjects, "status", "milestones[].status");
@@ -585,7 +585,7 @@ function normalizePBLProject(project) {
 		if (!Array.isArray(milestone.microtasks)) pblFail(`${milestonePath}.microtasks`, "an array", milestone.microtasks);
 		return milestone.microtasks.map((microtask, microtaskIndex) => {
 			const microtaskPath = `${milestonePath}.microtasks[${microtaskIndex}]`;
-			if (!isObject$1(microtask)) pblFail(microtaskPath, "an object", microtask);
+			if (!isObject$2(microtask)) pblFail(microtaskPath, "an object", microtask);
 			return microtask;
 		});
 	});
@@ -615,7 +615,7 @@ function normalizePBLProject(project) {
 	});
 	let threads;
 	if (project.threads === void 0) threads = (roles ?? []).map((role, index) => {
-		if (!isObject$1(role) || typeof role.id !== "string") pblFail(`roles[${index}].id`, "a string", isObject$1(role) ? role.id : role);
+		if (!isObject$2(role) || typeof role.id !== "string") pblFail(`roles[${index}].id`, "a string", isObject$2(role) ? role.id : role);
 		return {
 			agentId: role.id,
 			messages: []
@@ -751,7 +751,7 @@ const SHAPE_TEXT_ALIGNS = [
 */
 function normalizeShapeText(el) {
 	const t = el.text;
-	if (!isObject$1(t)) fail$1(el, "text", "an object (ShapeText)");
+	if (!isObject$2(t)) fail$1(el, "text", "an object (ShapeText)");
 	const textStr = (field, def) => {
 		const v = t[field];
 		if (v === void 0 || v === "") return def;
@@ -802,7 +802,7 @@ function normalizeLinePoints(el) {
 * present required content field has the wrong shape.
 */
 function normalizeElement(el) {
-	if (!isObject$1(el)) throw new Error(`@openmaic/dsl: cannot normalize element: expected an object, got ${JSON.stringify(el)}`);
+	if (!isObject$2(el)) throw new Error(`@openmaic/dsl: cannot normalize element: expected an object, got ${JSON.stringify(el)}`);
 	switch (el.type) {
 		case "text": return normalizeText(el);
 		case "image": return normalizeImage(el);
@@ -1141,6 +1141,274 @@ function searchMaterials(query, materialId, maxHits = 30) {
 	return {
 		hits,
 		truncated
+	};
+}
+
+//#endregion
+//#region src/layout.ts
+/** 安全区：画布 1000 × 562.5，四周 50px 边距（见 slide-craft）。 */
+const LIVE_AREA = {
+	left: 50,
+	right: 950,
+	top: 50,
+	bottom: 512.5
+};
+/**
+* 字号 → 各行数下的文本盒高度（行高 1.5，含上下 10px 内边距）。
+* 索引 0 对应 1 行。与 slide-craft 的高度对照表一致。
+*/
+const H_TABLE = {
+	14: [
+		43,
+		64,
+		85,
+		106,
+		127
+	],
+	16: [
+		46,
+		70,
+		94,
+		118,
+		142
+	],
+	18: [
+		49,
+		76,
+		103,
+		130,
+		157
+	],
+	20: [
+		52,
+		82,
+		112,
+		142,
+		172
+	],
+	24: [
+		58,
+		94,
+		130,
+		166,
+		202
+	],
+	28: [
+		64,
+		106,
+		148,
+		190,
+		232
+	],
+	32: [
+		70,
+		118,
+		166,
+		214,
+		262
+	],
+	36: [
+		76,
+		130,
+		184,
+		238,
+		292
+	]
+};
+const isObject$1 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+function stripHtml(html) {
+	return String(html).replace(/<[^>]+>/g, "");
+}
+/** 取一个文本元素里的最大字号；没写 font-size 时按 18px 估。 */
+function dominantFontSize(content) {
+	const sizes = [...String(content).matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
+	return sizes.length > 0 ? Math.max(...sizes) : 18;
+}
+/** 单段文本的折行风险：最长行已用掉超过 75% 的行容量。 */
+const WRAP_RISK_RATIO = .75;
+function checkTextBox(el, path, issues) {
+	const content = typeof el.content === "string" ? el.content : "";
+	if (!content) return;
+	const width = typeof el.width === "number" ? el.width : 0;
+	const height = typeof el.height === "number" ? el.height : 0;
+	if (width <= 0 || height <= 0) return;
+	const fontSize = dominantFontSize(content);
+	const charsPerLine = (width - 20) / fontSize;
+	const paragraphs = content.split(/<\/p>/i).map((p) => stripHtml(p).trim()).filter((p) => p.length > 0);
+	const lines = paragraphs.length > 0 ? paragraphs.reduce((sum, p) => sum + Math.max(1, Math.ceil(p.length / charsPerLine)), 0) : 1;
+	const needed = H_TABLE[fontSize]?.[lines - 1] ?? Math.round(fontSize * 1.5 * lines) + 20;
+	if (needed > height) issues.push({
+		path: `${path}/height`,
+		message: `文本可能溢出：约 ${lines} 行 × ${fontSize}px 需要约 ${needed}px，声明高度 ${height}px。加高文本盒或减少内容。`
+	});
+	else {
+		const firstLine = paragraphs[0];
+		if (lines === 1 && firstLine !== void 0 && charsPerLine > 0 && firstLine.length > charsPerLine * WRAP_RISK_RATIO) issues.push({
+			path,
+			message: `折行风险：该行 ${firstLine.length} 字符，已用掉行容量 ${(firstLine.length / charsPerLine * 100).toFixed(0)}%（宽 ${width}，${fontSize}px）。离折行只差一点，高度预算可能不保。`
+		});
+	}
+}
+/** 内容元素两两重叠；text 被后绘制的 shape 盖住也报。 */
+function checkOverlaps(elements, base, issues) {
+	const boxesOverlap = (a, b) => {
+		const pad = 1;
+		return Number(a.left) + pad < Number(b.left) + Number(b.width) && Number(b.left) + pad < Number(a.left) + Number(a.width) && Number(a.top) + pad < Number(b.top) + Number(b.height) && Number(b.top) + pad < Number(a.top) + Number(a.height);
+	};
+	const label = (el) => `${el.type}#${el.id}`;
+	const content = elements.filter((e) => [
+		"text",
+		"image",
+		"table"
+	].includes(String(e.type)));
+	for (let i = 0; i < content.length; i += 1) for (let j = i + 1; j < content.length; j += 1) {
+		const a = content[i];
+		const b = content[j];
+		if (boxesOverlap(a, b)) issues.push({
+			path: `${base}/elements/${a.id}`,
+			message: `与 ${label(b)} 重叠。内容元素互相压盖通常意味着其中一个需要挪位或缩放。`
+		});
+	}
+	const index = new Map(elements.map((e, i) => [String(e.id), i]));
+	const shapes = elements.filter((e) => String(e.type) === "shape");
+	for (const text of elements.filter((e) => String(e.type) === "text")) for (const shape of shapes) {
+		if (isObject$1(shape.text)) continue;
+		if ((index.get(String(shape.id)) ?? -1) < (index.get(String(text.id)) ?? -1)) continue;
+		if (boxesOverlap(text, shape)) issues.push({
+			path: `${base}/elements/${text.id}`,
+			message: `被 ${label(shape)} 盖住（该形状绘制在文字之后）。调整元素顺序或位置。`
+		});
+	}
+}
+/**
+* 版式检查：越界、文本溢出/折行、元素压盖。
+* 这些是启发式风险提示，不是结构错误。
+*/
+function checkSceneLayout(scene, scenePath, issues) {
+	if (!isObject$1(scene)) return;
+	const groups = [{
+		base: `${scenePath}/content/canvas`,
+		elements: scene.content?.canvas?.elements
+	}];
+	if (Array.isArray(scene.whiteboards)) scene.whiteboards.forEach((board, i) => {
+		groups.push({
+			base: `${scenePath}/whiteboards/${i}`,
+			elements: board?.elements
+		});
+	});
+	for (const group of groups) {
+		if (!Array.isArray(group.elements)) continue;
+		group.elements.forEach((raw, k) => {
+			if (!isObject$1(raw)) return;
+			const path = `${group.base}/elements/${k}`;
+			const isLine = String(raw.type) === "line";
+			const left = Number(raw.left);
+			const top = Number(raw.top);
+			const width = Number(raw.width);
+			const height = Number(raw.height ?? 0);
+			if (Number.isFinite(left) && (left < LIVE_AREA.left || top < LIVE_AREA.top)) issues.push({
+				path: `${path}/left`,
+				message: `越出安全区上/左边距（left=${left}, top=${top}，安全区从 ${LIVE_AREA.left} 起）。`
+			});
+			if (!isLine && Number.isFinite(width) && left + width > LIVE_AREA.right + .5) issues.push({
+				path: `${path}/width`,
+				message: `右边界 ${(left + width).toFixed(1)} 超出安全区右缘 ${LIVE_AREA.right}。`
+			});
+			if (!isLine && Number.isFinite(height) && top + height > LIVE_AREA.bottom + .5) issues.push({
+				path: `${path}/height`,
+				message: `底边 ${(top + height).toFixed(1)} 超出安全区下缘 ${LIVE_AREA.bottom}（内容会溢出画布）。`
+			});
+			if (String(raw.type) === "text") checkTextBox(raw, path, issues);
+		});
+		checkOverlaps(group.elements, group.base, issues);
+	}
+}
+const pad2 = (n) => String(n).padStart(2, "0");
+/**
+* id 归一：给一页的所有 id 加页前缀并保证页内唯一。
+*
+* 背景：长课程里同一页常会调用两次同一个版式函数，两批元素的 id 会从同一个
+* 起点开始（如两处都是 el_step1），渲染层因此出现重复 key。
+*
+* 规则：
+*   - 元素 id → `p{order}_{原id}`，页内重复的追加 `_2`、`_3`
+*   - 白板元素 id → `p{order}_wb{白板序号}_{原id}`
+*   - 表格单元格 id → `{新元素id}_c{行}_{列}`
+*   - 动作 id → `p{order}_{原id}`；spotlight / laser 的 elementId 改指新元素 id
+*   - quiz 题目 id → `p{order}_{原id}`
+*
+* 返回改写后的场景与改名数量。
+*/
+function normalizeSceneIds(scene, order) {
+	if (!isObject$1(scene)) return {
+		scene,
+		renamed: 0
+	};
+	const prefix = `p${pad2(order)}`;
+	const canvasElements = isObject$1(scene.content?.canvas) ? scene.content.canvas.elements : void 0;
+	if (Array.isArray(canvasElements) && canvasElements.length > 0 && canvasElements.every((el) => isObject$1(el) && typeof el.id === "string" && el.id.startsWith(`${prefix}_`))) return {
+		scene,
+		renamed: 0
+	};
+	const seen = /* @__PURE__ */ new Map();
+	const remap = /* @__PURE__ */ new Map();
+	let renamed = 0;
+	/** 在页内为 base 生成唯一 id；同一 base 第二次出现时追加序号。 */
+	const uniqueId = (base) => {
+		const n = (seen.get(base) ?? 0) + 1;
+		seen.set(base, n);
+		return n > 1 ? `${base}_${n}` : base;
+	};
+	const renameElements = (elements, keyPrefix) => {
+		if (!Array.isArray(elements)) return elements;
+		return elements.map((raw) => {
+			if (!isObject$1(raw) || typeof raw.id !== "string") return raw;
+			const nextId = uniqueId(`${keyPrefix}${raw.id}`);
+			remap.set(raw.id, nextId);
+			renamed += 1;
+			const next = {
+				...raw,
+				id: nextId
+			};
+			if (next.type === "table" && Array.isArray(next.data)) next.data = next.data.map((row, r) => Array.isArray(row) ? row.map((cell, c) => ({
+				...cell,
+				id: `${nextId}_c${r}_${c}`
+			})) : row);
+			return next;
+		});
+	};
+	const next = { ...scene };
+	next.content = isObject$1(scene.content) ? {
+		...scene.content,
+		...isObject$1(scene.content.canvas) ? { canvas: {
+			...scene.content.canvas,
+			elements: renameElements(scene.content.canvas.elements, `${prefix}_`)
+		} } : {}
+	} : scene.content;
+	if (Array.isArray(scene.whiteboards)) next.whiteboards = scene.whiteboards.map((board, i) => isObject$1(board) ? {
+		...board,
+		elements: renameElements(board.elements, `${prefix}_wb${i + 1}_`)
+	} : board);
+	if (Array.isArray(scene.actions)) next.actions = scene.actions.map((action) => {
+		if (!isObject$1(action)) return action;
+		const out = { ...action };
+		if (typeof out.id === "string") out.id = uniqueId(`${prefix}_${out.id}`);
+		if ((out.type === "spotlight" || out.type === "laser") && typeof out.elementId === "string" && remap.has(out.elementId)) out.elementId = remap.get(out.elementId);
+		return out;
+	});
+	if (isObject$1(scene.content) && scene.content.type === "quiz" && Array.isArray(scene.content.questions)) next.content = {
+		...next.content,
+		questions: scene.content.questions.map((question) => {
+			if (!isObject$1(question) || typeof question.id !== "string") return question;
+			return {
+				...question,
+				id: uniqueId(`${prefix}_${question.id}`)
+			};
+		})
+	};
+	return {
+		scene: next,
+		renamed
 	};
 }
 
@@ -11757,16 +12025,109 @@ function validateMedia(manifest) {
 function validateManifest(manifest) {
 	const structure = validateManifestStructure(manifest);
 	const media = validateMedia(manifest);
-	const warnings = [...structure.warnings, ...media.warnings];
+	const references = validateReferences(manifest);
+	const warnings = [
+		...structure.warnings,
+		...media.warnings,
+		...references.warnings
+	];
 	const versionNotice = dslVersionNotice();
 	if (versionNotice) warnings.push(versionNotice);
-	const errors = [...structure.errors, ...media.errors];
+	const errors = [
+		...structure.errors,
+		...media.errors,
+		...references.errors
+	];
 	return {
 		valid: errors.length === 0,
 		errors,
 		warnings,
 		dslVersion: DSL_VERSION,
 		validator: structure.validator
+	};
+}
+/**
+* 上游 schema 只要求 id 是非空字符串，不要求唯一。但渲染层把元素放进同一个
+* 列表里以 id 作 key：同一页两个元素同 id，React 会报重复 key 并反复重渲染。
+* 这在长课程里真实发生过——同一页调了两次同一个版式函数，两批元素 id 从同一
+* 个起点开始，结构校验全绿，渲染却坏掉。
+*
+* 所以这里检查：页内唯一、全篇唯一（元素 / 动作 / 题目 / 表格单元格）、
+* 以及 spotlight / laser 的 elementId 必须能解析到同场景元素。
+*/
+function validateReferences(manifest) {
+	const errors = [];
+	const warnings = [];
+	const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+	const globalIds = /* @__PURE__ */ new Map();
+	const noteGlobal = (id, order, kind, path) => {
+		const seenAt = globalIds.get(id);
+		if (seenAt !== void 0) errors.push({
+			path,
+			message: `${kind} id "${id}" 全篇重复（order ${seenAt} 与 ${order}）。渲染层以 id 作 key，重复会导致重复 key 警告与页面重渲染。用 scene_normalize_ids 归一。`
+		});
+		else globalIds.set(id, order);
+	};
+	scenes.forEach((scene, i) => {
+		if (!isObj(scene)) return;
+		const order = typeof scene.order === "number" ? scene.order : i + 1;
+		const base = `/scenes/${i}`;
+		const groups = [{
+			base: `${base}/content/canvas/elements`,
+			elements: scene.content?.canvas?.elements
+		}];
+		if (Array.isArray(scene.whiteboards)) scene.whiteboards.forEach((board, bi) => {
+			groups.push({
+				base: `${base}/whiteboards/${bi}/elements`,
+				elements: board?.elements
+			});
+		});
+		const sceneIds = /* @__PURE__ */ new Set();
+		for (const group of groups) {
+			if (!Array.isArray(group.elements)) continue;
+			const pageIds = /* @__PURE__ */ new Map();
+			group.elements.forEach((el, k) => {
+				if (!isObj(el) || typeof el.id !== "string") return;
+				const p = `${group.base}/${k}/id`;
+				if (pageIds.has(el.id)) errors.push({
+					path: p,
+					message: `元素 id "${el.id}" 在本页重复（第 ${pageIds.get(el.id)} 个与第 ${k} 个）。同页两次调用同一个版式函数时会出现这种情况。`
+				});
+				else pageIds.set(el.id, k);
+				noteGlobal(el.id, order, "元素", p);
+				sceneIds.add(el.id);
+				if (el.type === "table" && Array.isArray(el.data)) {
+					const cellIds = /* @__PURE__ */ new Map();
+					el.data.forEach((row, r) => {
+						if (!Array.isArray(row)) return;
+						row.forEach((cell, c) => {
+							if (!isObj(cell) || typeof cell.id !== "string") return;
+							if (cellIds.has(cell.id)) errors.push({
+								path: `${p}`,
+								message: `表格单元格 id "${cell.id}" 重复（r${r}c${c} 与第 ${cellIds.get(cell.id)} 处）。`
+							});
+							else cellIds.set(cell.id, `${r},${c}`);
+						});
+					});
+				}
+			});
+		}
+		for (const [j, action] of (Array.isArray(scene.actions) ? scene.actions : []).entries()) {
+			if (!isObj(action)) continue;
+			const p = `${base}/actions/${j}`;
+			if (typeof action.id === "string") noteGlobal(action.id, order, "动作", `${p}/id`);
+			if ((action.type === "spotlight" || action.type === "laser") && typeof action.elementId === "string" && !sceneIds.has(action.elementId)) errors.push({
+				path: `${p}/elementId`,
+				message: `${action.type} 指向的元素 "${action.elementId}" 在本页不存在。重命名元素后忘记同步动作引用是最常见的原因。`
+			});
+		}
+		if (isObj(scene.content) && scene.content.type === "quiz" && Array.isArray(scene.content.questions)) scene.content.questions.forEach((question, q) => {
+			if (isObj(question) && typeof question.id === "string") noteGlobal(question.id, order, "题目", `${base}/content/questions/${q}/id`);
+		});
+	});
+	return {
+		errors,
+		warnings
 	};
 }
 /**
@@ -12067,6 +12428,7 @@ function sceneClone(args) {
 	rewritten.title = title;
 	const total = scenes.length;
 	const targetOrder = typeof args.newOrder === "number" && Number.isInteger(args.newOrder) && args.newOrder >= 1 ? Math.min(args.newOrder, total + 1) : total + 1;
+	const { scene: normalizedScene, renamed: normalizedIds } = normalizeSceneIds(rewritten, targetOrder);
 	const nextScenes = [...scenes.map((scene) => {
 		const order = typeof scene?.order === "number" ? scene.order : 0;
 		return order >= targetOrder ? {
@@ -12074,7 +12436,7 @@ function sceneClone(args) {
 			order: order + 1
 		} : scene;
 	}), {
-		...rewritten,
+		...normalizedScene,
 		order: targetOrder
 	}].sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
 	const nextManifest = {
@@ -12088,11 +12450,64 @@ function sceneClone(args) {
 			text: [
 				`✅ 已克隆 order=${fromOrder} 的页面到 order=${targetOrder}`,
 				`新标题：${title}`,
-				`替换了 ${replacements.length} 处文字`,
+				`替换了 ${replacements.length} 处文字；克隆页 ${normalizedIds} 个 id 已加页前缀并去重`,
 				...formatIssues$1("警告", warnings, 30),
 				...formatIssues$1("克隆后的结构校验错误（请修复后再打包）", result.errors, 30),
 				"",
 				"下一步：用 replacements 逐条改写文字槽位，或先 draft_validate 看还有哪些槽位没换。"
+			].join("\n")
+		}, {
+			type: "text",
+			text: "```json\n" + JSON.stringify(nextManifest, null, 2) + "\n```"
+		}],
+		isError: !result.valid
+	};
+}
+function draftLayout(args) {
+	const manifest = readManifestArg(args);
+	const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+	const issues = [];
+	scenes.forEach((scene, i) => {
+		checkSceneLayout(scene, `/scenes/${i}`, issues);
+	});
+	return {
+		content: [{
+			type: "text",
+			text: [
+				issues.length === 0 ? "✅ 未发现版式风险" : `[!] 发现 ${issues.length} 处版式风险（越界 / 溢出 / 折行 / 压盖）`,
+				"这些是启发式判断，不是结构错误——逐条看，确认是不是有意为之。",
+				"",
+				"安全区：画布 1000 × 562.5，四周 50px（内容区 50–950 × 50–512.5）。",
+				...issues.slice(0, 60).map((x) => `  - ${x.path}  ${x.message}`),
+				...issues.length > 60 ? [`  …另有 ${issues.length - 60} 处`] : []
+			].join("\n")
+		}],
+		isError: issues.length > 0
+	};
+}
+function sceneNormalizeIds(args) {
+	const manifest = readManifestArg(args);
+	const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+	if (scenes.length === 0) throw new ToolError("manifest.scenes 为空，没有可归一化的页面");
+	let renamed = 0;
+	const nextScenes = scenes.map((scene, i) => {
+		const result = normalizeSceneIds(scene, typeof scene?.order === "number" ? scene.order : i + 1);
+		renamed += result.renamed;
+		return result.scene;
+	});
+	const nextManifest = {
+		...manifest,
+		scenes: nextScenes
+	};
+	const result = validateManifest(nextManifest);
+	return {
+		content: [{
+			type: "text",
+			text: [
+				`✅ 已归一化 ${renamed} 个 id（元素 / 动作 / 题目 / 表格单元格）`,
+				"规则：全部加 `p{页码}_` 前缀，页内重复的追加 `_2`、`_3`；",
+				"spotlight / laser 的 elementId 已同步改指新 id。",
+				...formatIssues$1("归一化后的校验错误", result.errors, 30)
 			].join("\n")
 		}, {
 			type: "text",
@@ -12268,7 +12683,7 @@ const TOOLS = [
 	},
 	{
 		name: "scene_clone",
-		description: "克隆一页：复制指定 order 的页面（连同它的全部版式），插入到新位置，只改写文字槽位。这是「不逐字重画版式」的主力工具——先克隆一个已有的好版面，再用 replacements 换掉文案。若某条旁白的文字被改写，其 audioRef 会被自动移除并告警。",
+		description: "克隆一页：复制指定 order 的页面（连同它的全部版式），插入到新位置，只改写文字槽位。这是「不逐字重画版式」的主力工具——先克隆一个已有的好版面，再用 replacements 换掉文案。克隆页的元素 / 动作 / 表格单元格 id 会自动加 `p{页码}_` 前缀并去重，spotlight / laser 引用同步改写，避免与源页撞 id。若某条旁白的文字被改写，其 audioRef 会被自动移除并告警。",
 		inputSchema: {
 			type: "object",
 			properties: {
@@ -12315,6 +12730,42 @@ const TOOLS = [
 				}
 			},
 			required: ["fromOrder", "title"],
+			additionalProperties: false
+		}
+	},
+	{
+		name: "draft_layout",
+		description: "版式检查：元素越出安全区、文本盒高度不足导致溢出、单行接近折行（>75% 行容量）、内容元素互相压盖、文字被后绘制的形状盖住。这些是结构校验抓不到的启发式风险；报出来后逐条判断是否需要调整。每写完一页、以及交付前，都应跑一次。",
+		inputSchema: {
+			type: "object",
+			properties: {
+				manifest: {
+					type: "object",
+					description: "manifest 对象（与 manifestPath 二选一）"
+				},
+				manifestPath: {
+					type: "string",
+					description: "manifest.json 的本地绝对路径"
+				}
+			},
+			additionalProperties: false
+		}
+	},
+	{
+		name: "scene_normalize_ids",
+		description: "id 归一：给全部场景的元素 / 动作 / 题目 / 表格单元格 id 加 `p{页码}_` 前缀并保证页内唯一（页内重复的追加 `_2`、`_3`），spotlight 与 laser 的 elementId 同步改指新 id。**长课程交付前必跑**——同一页调用两次同一个版式函数会让两批元素 id 从同一起点开始，渲染层出现重复 key。id 改写会改变身份，请在打包前跑一次即可。",
+		inputSchema: {
+			type: "object",
+			properties: {
+				manifest: {
+					type: "object",
+					description: "manifest 对象（与 manifestPath 二选一）"
+				},
+				manifestPath: {
+					type: "string",
+					description: "manifest.json 的本地绝对路径"
+				}
+			},
 			additionalProperties: false
 		}
 	},
@@ -12376,7 +12827,9 @@ const HANDLERS = {
 	dsl_schema_get: dslSchemaGet,
 	draft_validate: draftValidate,
 	draft_normalize: draftNormalize,
+	draft_layout: draftLayout,
 	scene_clone: sceneClone,
+	scene_normalize_ids: sceneNormalizeIds,
 	course_pack_maic_zip: coursePack
 };
 function callTool(name, args) {

@@ -76,6 +76,22 @@ npm test           # 79 项冒烟测试
 
 拿到 `.maic.zip` 后，在 OpenMAIC 首页选「导入课堂」即可预览。
 
+## MCP 工具（10 个）
+
+| 工具 | 作用 |
+| --- | --- |
+| `material_list` `material_read` `material_search` | 读原始材料——保真的根 |
+| `dsl_schema_get` | **权威必需字段表** + 契约摘要（运行时从上游 schema 推导） |
+| `draft_normalize` | 让上游补默认值、派生几何，少写一批字段 |
+| `draft_validate` | 结构闸门（上游 JSON Schema）+ id 唯一性 + 引用完整性 |
+| `draft_layout` | 版式检查：越界 / 文本溢出 / 折行 / 元素压盖 |
+| `scene_clone` | 复制已有页面的版式，只改写文字槽位（自动处理 id） |
+| `scene_normalize_ids` | 全篇 id 归一：加页前缀并去重，同步改写 spotlight 引用 |
+| `course_pack_maic_zip` | 打出 `.maic.zip` |
+
+CLI 也有对应的非交互入口：`--validate <manifest.json>`（结构 + id）、
+`--check <x.maic.zip>`（校验已打包的 zip）、`--pack`、`--tools`。
+
 ## 仓库布局
 
 ```text
@@ -113,20 +129,23 @@ maic-course-gen-skills/
 
 ## 已验证
 
-- `npm test`：**79 项全绿**，通过真实 MCP stdio 协议驱动构建产物，以上游 JSON Schema
+- `npm test`：**92 项全绿**，通过真实 MCP stdio 协议驱动构建产物，以上游 JSON Schema
   为闸门。
 - 自建 ZIP 写入器（`node:zlib` + 手写容器 + CRC32）产出的包能被系统 `unzip` 读取；
   产物除 `node:` 内置模块外无任何运行时 import。
-- `examples/minimal-course/manifest.json` 通过校验并可打包。
+- `examples/` 下三个示例 manifest 全部通过校验。
+- 一份 **45 页 / 700 个 id 的真实课件**（由本技能驱动另一个 Agent 产出）通过全部
+  校验；其暴露出的 id 重复与版式缺陷已回填为本仓库的检查工具。
 
 **尚未验证**：把包真正导入一个运行中的 OpenMAIC 实例并渲染。导入行为是从源码读出来的
 （`lib/import/use-import-classroom.ts`），还没端到端跑过。
 
 ## 已知取舍
 
-**媒体需要你自己准备。** 不用内部生成器就没有 AI 配图与 TTS。`media/` 与 `audio/`
-需要真实字节，占位符 `src` 会永远显示骨架屏。可以只做静态课件，也可以自己出图/TTS
-后通过 `files[]` 传进来。
+**媒体最可靠的来源是源材料本身。** 从 PDF 里按页提取系统截图（逐张核对内容后配图、
+压缩到 1440px 宽）比让 Agent 画示意图可靠得多，也避免了"图是真的、配文是编的"。
+不用内部生成器就没有 AI 配图与 TTS；`media/` 与 `audio/` 需要真实字节，
+占位符 `src` 会永远显示骨架屏。
 
 **`DSL_VERSION` 会漂。** 导入侧不校验格式版本，上游改了 DSL 时旧包会静默出错。
 `dsl_schema_get` 会在检测到版本不一致时告警，包里也自带版本戳。

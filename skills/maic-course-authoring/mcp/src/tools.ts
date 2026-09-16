@@ -22,12 +22,14 @@ import {
   MEDIA_INDEX_TYPES,
 } from './contract.js';
 import { listMaterials, readMaterialPage, searchMaterials, MaterialsError } from './materials.js';
+import { checkSceneLayout, normalizeSceneIds, type LayoutIssue } from './layout.js';
 import {
   normalizeManifest,
   requiredFieldsSummary,
   schemaInfo,
   validateManifest,
   type Issue,
+  type Loose,
   type ManifestLike,
 } from './validate.js';
 import { buildZip, isSafeZipPath } from './zip.js';
@@ -341,12 +343,19 @@ function sceneClone(args: Record<string, unknown>): ToolResult {
       ? Math.min(args.newOrder, total + 1)
       : total + 1;
 
+  // 克隆出的页面与源页共享同一批元素 id，会造成跨页 id 重复（渲染层重复 key）。
+  // 这里对克隆页做 id 归一：加页前缀、页内去重，并同步改写 spotlight / laser 引用。
+  const { scene: normalizedScene, renamed: normalizedIds } = normalizeSceneIds(
+    rewritten,
+    targetOrder,
+  );
+
   const shifted = scenes.map((scene) => {
     const order = typeof scene?.order === 'number' ? scene.order : 0;
     return order >= targetOrder ? { ...scene, order: order + 1 } : scene;
   });
 
-  const nextScenes = [...shifted, { ...rewritten, order: targetOrder }].sort(
+  const nextScenes = [...shifted, { ...normalizedScene, order: targetOrder }].sort(
     (a, b) => (a?.order ?? 0) - (b?.order ?? 0),
   );
 
@@ -356,7 +365,7 @@ function sceneClone(args: Record<string, unknown>): ToolResult {
   const lines = [
     `✅ 已克隆 order=${fromOrder} 的页面到 order=${targetOrder}`,
     `新标题：${title}`,
-    `替换了 ${replacements.length} 处文字`,
+    `替换了 ${replacements.length} 处文字；克隆页 ${normalizedIds} 个 id 已加页前缀并去重`,
     ...formatIssues('警告', warnings, 30),
     ...formatIssues(
       '克隆后的结构校验错误（请修复后再打包）',
@@ -367,6 +376,58 @@ function sceneClone(args: Record<string, unknown>): ToolResult {
     '下一步：用 replacements 逐条改写文字槽位，或先 draft_validate 看还有哪些槽位没换。',
   ];
 
+  return {
+    content: [
+      { type: 'text', text: lines.join('\n') },
+      { type: 'text', text: '```json\n' + JSON.stringify(nextManifest, null, 2) + '\n```' },
+    ],
+    isError: !result.valid,
+  };
+}
+
+function draftLayout(args: Record<string, unknown>): ToolResult {
+  const manifest = readManifestArg(args);
+  const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+  const issues: LayoutIssue[] = [];
+
+  scenes.forEach((scene, i) => {
+    checkSceneLayout(scene as Loose, `/scenes/${i}`, issues);
+  });
+
+  const lines = [
+    issues.length === 0
+      ? '✅ 未发现版式风险'
+      : `[!] 发现 ${issues.length} 处版式风险（越界 / 溢出 / 折行 / 压盖）`,
+    '这些是启发式判断，不是结构错误——逐条看，确认是不是有意为之。',
+    '',
+    '安全区：画布 1000 × 562.5，四周 50px（内容区 50–950 × 50–512.5）。',
+    ...issues.slice(0, 60).map((x) => `  - ${x.path}  ${x.message}`),
+    ...(issues.length > 60 ? [`  …另有 ${issues.length - 60} 处`] : []),
+  ];
+  return { content: [{ type: 'text', text: lines.join('\n') }], isError: issues.length > 0 };
+}
+
+function sceneNormalizeIds(args: Record<string, unknown>): ToolResult {
+  const manifest = readManifestArg(args);
+  const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+  if (scenes.length === 0) throw new ToolError('manifest.scenes 为空，没有可归一化的页面');
+
+  let renamed = 0;
+  const nextScenes = scenes.map((scene, i) => {
+    const result = normalizeSceneIds(scene as Loose, typeof scene?.order === 'number' ? scene.order : i + 1);
+    renamed += result.renamed;
+    return result.scene;
+  });
+
+  const nextManifest: ManifestLike = { ...manifest, scenes: nextScenes };
+  const result = validateManifest(nextManifest);
+
+  const lines = [
+    `✅ 已归一化 ${renamed} 个 id（元素 / 动作 / 题目 / 表格单元格）`,
+    '规则：全部加 `p{页码}_` 前缀，页内重复的追加 `_2`、`_3`；',
+    'spotlight / laser 的 elementId 已同步改指新 id。',
+    ...formatIssues('归一化后的校验错误', result.errors, 30),
+  ];
   return {
     content: [
       { type: 'text', text: lines.join('\n') },
@@ -537,7 +598,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'scene_clone',
     description:
-      '克隆一页：复制指定 order 的页面（连同它的全部版式），插入到新位置，只改写文字槽位。这是「不逐字重画版式」的主力工具——先克隆一个已有的好版面，再用 replacements 换掉文案。若某条旁白的文字被改写，其 audioRef 会被自动移除并告警。',
+      '克隆一页：复制指定 order 的页面（连同它的全部版式），插入到新位置，只改写文字槽位。这是「不逐字重画版式」的主力工具——先克隆一个已有的好版面，再用 replacements 换掉文案。克隆页的元素 / 动作 / 表格单元格 id 会自动加 `p{页码}_` 前缀并去重，spotlight / laser 引用同步改写，避免与源页撞 id。若某条旁白的文字被改写，其 audioRef 会被自动移除并告警。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -566,6 +627,32 @@ export const TOOLS: ToolDefinition[] = [
         },
       },
       required: ['fromOrder', 'title'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'draft_layout',
+    description:
+      '版式检查：元素越出安全区、文本盒高度不足导致溢出、单行接近折行（>75% 行容量）、内容元素互相压盖、文字被后绘制的形状盖住。这些是结构校验抓不到的启发式风险；报出来后逐条判断是否需要调整。每写完一页、以及交付前，都应跑一次。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        manifest: { type: 'object', description: 'manifest 对象（与 manifestPath 二选一）' },
+        manifestPath: { type: 'string', description: 'manifest.json 的本地绝对路径' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'scene_normalize_ids',
+    description:
+      'id 归一：给全部场景的元素 / 动作 / 题目 / 表格单元格 id 加 `p{页码}_` 前缀并保证页内唯一（页内重复的追加 `_2`、`_3`），spotlight 与 laser 的 elementId 同步改指新 id。**长课程交付前必跑**——同一页调用两次同一个版式函数会让两批元素 id 从同一起点开始，渲染层出现重复 key。id 改写会改变身份，请在打包前跑一次即可。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        manifest: { type: 'object', description: 'manifest 对象（与 manifestPath 二选一）' },
+        manifestPath: { type: 'string', description: 'manifest.json 的本地绝对路径' },
+      },
       additionalProperties: false,
     },
   },
@@ -610,7 +697,9 @@ const HANDLERS: Record<string, Handler> = {
   dsl_schema_get: dslSchemaGet,
   draft_validate: draftValidate,
   draft_normalize: draftNormalize,
+  draft_layout: draftLayout,
   scene_clone: sceneClone,
+  scene_normalize_ids: sceneNormalizeIds,
   course_pack_maic_zip: coursePack,
 };
 

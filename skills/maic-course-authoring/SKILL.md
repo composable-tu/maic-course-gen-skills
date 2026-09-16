@@ -77,16 +77,24 @@ description: 用外部 Agent 依据原始材料自主编写 OpenMAIC 课件，�
 10. **文件写错不报错。** `manifest.json` 在导入侧只有三处校验（见 `maic-zip.md`），
     所以本地校验是不可省的。
 11. **交付时如实说明。** 哪些材料被覆盖、哪些没覆盖、哪些解析失败，都要讲清楚。
+12. **id 全篇唯一。** 元素 / 动作 / 题目 id 重复会让渲染层报重复 key。
+    同一页调用两次同一个版式函数最容易撞 id。交付前跑 `scene_normalize_ids`。
+13. **结构过了还要看版式。** 越界、文本溢出、元素压盖，schema 都不查。
+    每页写完跑 `draft_layout`。
 
 ## MCP 工具
 
-工具定义见 [`mcp/README.md`](mcp/README.md)。四个工具：
+工具定义见 [`mcp/README.md`](mcp/README.md)。十个工具：
 
 | 工具 | 用途 |
 | --- | --- |
 | `material_list` / `material_read` / `material_search` | 读原始材料（保真的根） |
-| `dsl_schema_get` | 取结构契约与 `DSL_VERSION`，写作时随时参照 |
-| `draft_validate` | 结构校验（**硬闸门**），抓缺失字段、类型错误、未知字段 |
+| `dsl_schema_get` | 取结构契约、权威必需字段表与 `DSL_VERSION` |
+| `draft_validate` | 结构校验 + **id 唯一性** + 引用完整性（**硬闸门**） |
+| `draft_normalize` | 让上游补元素默认值、派生可派生的几何 |
+| `draft_layout` | 版式检查：越界 / 文本溢出 / 折行 / 元素压盖 |
+| `scene_clone` | 复制已有页面的版式，只改写文字槽位（自动处理 id） |
+| `scene_normalize_ids` | 全篇 id 归一：加页前缀并去重，同步改写 spotlight 引用 |
 | `course_pack_maic_zip` | 打出 `.maic.zip` |
 
 `material_*` 需要一个材料目录。启动 MCP 时通过环境变量设定：
