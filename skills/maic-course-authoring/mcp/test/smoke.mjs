@@ -657,7 +657,22 @@ try {
     '归一化幂等：再跑一次不再改动',
   );
 
-  console.log('\n[9] course_pack_maic_zip');
+  console.log('\n[8b] agents[].avatar 校验');
+
+  const badAvatar = buildManifest();
+  badAvatar.agents[0].avatar = 'teacher-1'; // 不存在的资源，导入后静默空头像
+  const rBad = await client.call('draft_validate', { manifest: badAvatar });
+  assert(
+    /头像 "teacher-1" 不是已知的应用内置头像/.test(toolText(rBad)) && !isError(rBad),
+    '未知内置头像路径报警告（不阻断）',
+  );
+
+  const goodAvatar = buildManifest();
+  goodAvatar.agents[0].avatar = '/avatars/teacher.png';
+  const rGood = await client.call('draft_validate', { manifest: goodAvatar });
+  assert(!/不是已知的应用内置头像/.test(toolText(rGood)), '官方内置头像路径不告警');
+
+  console.log('\n[8c] course_pack_maic_zip');
   const noBytes = await client.call('course_pack_maic_zip', {
     manifest: buildManifest(),
     outputPath: zipPath,

@@ -14,9 +14,11 @@
 import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 
 import {
+  APP_AVATARS,
   CANVAS,
   CLASSROOM_ZIP_FORMAT_VERSION,
   CONTRACT_BASELINE,
+  DISCUSSION_AGENT_FALLBACK,
   DSL_VERSION,
   IMPORT_CHECKS,
   MEDIA_INDEX_TYPES,
@@ -157,6 +159,19 @@ function dslSchemaGet(): ToolResult {
       'audioRef / agentIndex 是 ZIP 层的字段，DSL 的 Action 不认识它们。' +
       'audioRef 必须指向 ZIP 内路径，其存在性由 course_pack_maic_zip 与 draft_validate 的媒体检查负责。',
     mediaIndexTypes: MEDIA_INDEX_TYPES,
+    appAvatars: {
+      note:
+        'agents[].avatar 写应用相对路径 /avatars/<文件名>，导入时原样透传、不拷贝字节；' +
+        '路径无效不会报错，只会静默显示为空头像。也可用 http(s)/data 地址。清单是快照，' +
+        '以实际部署的 OpenMAIC public/avatars/ 为准。',
+      known: APP_AVATARS,
+    },
+    agentConventions: {
+      roles: '官方课件用 teacher / assistant / student；导入时 discussion 兜底' + DISCUSSION_AGENT_FALLBACK,
+      priority: '官方 CPR 课件用 10 / 7 / 5 / 4（teacher 最高），数值越大越靠前',
+      optional: 'agents 数组整体可省略（官方 Python 课件就没有）；但用 discussion 就需要',
+      voice: '可选 voiceConfig（{voiceId, providerId}）与 voiceDesign（texture/delivery/identity，官方用英文描述）',
+    },
     zip: {
       manifestAtRoot: 'manifest.json',
       audioDir: 'audio/',

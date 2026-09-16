@@ -27,6 +27,29 @@ export const CONTRACT_BASELINE = '0.3.0';
 /** ZIP 格式版本，与上游 `CLASSROOM_ZIP_FORMAT_VERSION` 一致。 */
 export const CLASSROOM_ZIP_FORMAT_VERSION = 1;
 
+/**
+ * 应用内置头像清单（OpenMAIC 仓库 `public/avatars/`，同步 commit 3edaa499，32 个）。
+ *
+ * 课件里 `agents[].avatar` 写**应用相对路径**（如 `/avatars/teacher.png`），
+ * 导入时**原样透传、不拷贝字节**，渲染时才由应用按路径解析——路径写错不会报错，
+ * 只会静默显示为空头像。这类"字段合法但资源不存在"的问题只能靠这份清单兜住。
+ *
+ * 这是快照不是契约：部署方增删头像后此表会过期，所以校验只发**警告**，
+ * 并提示以实际部署的 `public/avatars/` 为准。也可以用 `http(s)` / `data` 地址。
+ */
+export const APP_AVATARS: readonly string[] = [
+  'assist-2.png', 'assist.png', 'assistant.svg', 'builder.svg', 'clown-2.png',
+  'clown.png', 'clown.svg', 'coder.svg', 'creative.svg', 'curious-2.png',
+  'curious.png', 'curious.svg', 'dreamer.svg', 'explorer.svg', 'instructor.png',
+  'learner.svg', 'note-taker-2.png', 'note-taker.png', 'reader.svg', 'scholar.svg',
+  'student1.svg', 'student2.svg', 'student3.svg', 'teacher-2.png', 'teacher.png',
+  'teacher.svg', 'thinker-2.png', 'thinker.png', 'thinker.svg', 'user.png',
+  'user.svg', 'notes.svg',
+];
+
+/** 导入侧的 discussion 兜底规则：优先指向 role 为 student 的智能体，其次是非 teacher。 */
+export const DISCUSSION_AGENT_FALLBACK = '先找 role 为 "student" 的智能体，其次取第一个非 "teacher" 的智能体。';
+
 /** 画布常量（来自 slide-craft：1000 × 562.5，四周 50px 边距）。 */
 export const CANVAS = {
   viewportSize: 1000,

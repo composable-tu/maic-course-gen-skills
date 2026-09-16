@@ -37,6 +37,7 @@ import {
   MEDIA_INDEX_TYPES,
 } from './contract.js';
 import { requiredFieldsSummary, schemaInfo, validateWithSchema } from './validate-schema.js';
+import { APP_AVATARS } from './contract.js';
 import { isSafeZipPath } from './zip.js';
 
 // ─────────────────────────────────────────────────────────────
@@ -516,7 +517,38 @@ export function validateReferences(manifest: ManifestLike): { errors: Issue[]; w
     }
   });
 
+  checkAgentAvatars(manifest, warnings);
+
   return { errors, warnings };
+}
+
+/**
+ * `agents[].avatar` 写的是**应用相对路径**（如 `/avatars/teacher.png`），导入时
+ * 原样透传、不拷贝字节，渲染时才由应用解析——路径写错不会有任何报错，
+ * 只会静默显示为空头像。实战中真实发生过（示例初版写了不存在的 `teacher-1`）。
+ *
+ * 内置路径按已知清单核对（快照，可能过期，所以只发警告）；
+ * `http(s)` / `data` 地址放行；留空也放行（应用有缺省头像）。
+ */
+function checkAgentAvatars(manifest: ManifestLike, warnings: Issue[]): void {
+  const agents = Array.isArray(manifest.agents) ? manifest.agents : [];
+  agents.forEach((agent, i) => {
+    if (!isObj(agent)) return;
+    const avatar = typeof agent.avatar === 'string' ? agent.avatar.trim() : '';
+    const p = `/agents/${i}/avatar`;
+    if (avatar === '' || /^(https?:|data:|blob:)/.test(avatar)) return;
+
+    const fileName = avatar.startsWith('/avatars/') ? avatar.slice('/avatars/'.length) : avatar;
+    if (avatar.startsWith('/avatars/') && APP_AVATARS.includes(fileName)) return;
+
+    warnings.push({
+      path: p,
+      message:
+        `头像 "${avatar}" 不是已知的应用内置头像（/avatars/<文件名>，清单见 dsl_schema_get 的 ` +
+        `appAvatars），也不是 http(s)/data 地址。导入时原样透传、不校验，路径无效会静默显示为空头像。` +
+        `内置头像共 ${APP_AVATARS.length} 个（以实际部署的 public/avatars/ 为准）。`,
+    });
+  });
 }
 
 // ─────────────────────────────────────────────────────────────

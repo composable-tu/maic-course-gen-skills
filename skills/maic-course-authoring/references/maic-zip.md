@@ -171,6 +171,25 @@ media/asset-1.poster.png       ← 可选，视频封面（与视频同序号）
 **`prompt` 字段**记录生成时的提示词。这是有价值的溯源信息：配图与正文不符时，
 能看出当初想生成什么。自产课件若引用外部生成服务，建议同样把提示词记进去。
 
+### 智能体的头像：应用相对路径，导入时不校验
+
+`agents[].avatar` 写**应用内置资源的应用相对路径**（如 `/avatars/teacher.png`）。
+导入时**原样透传、不拷贝字节**（`agentConfigFromManifest` 逐字段照搬），
+渲染时才由应用按路径解析——**路径写错不会有任何报错，只会静默显示为空头像**。
+
+应用内置头像在 OpenMAIC 仓库 `public/avatars/` 下（32 个，`teacher.png`、
+`note-taker.png`、`instructor.png`、`scholar.svg`、`curious.png`、`reader.svg` 等），
+**包内不带头像字节，也不应该带**。`dsl_schema_get` 会返回已知清单（快照）；
+`draft_validate` 对不在清单里的路径发警告。也可以用 `http(s)` / `data` 地址。
+
+其他约定（来自官方 CPR 课件）：
+
+- `role` 用 `teacher` / `assistant` / `student`；导入侧给 `discussion` 找兜底发言人时
+  **优先取 role 为 student 的，其次取第一个非 teacher 的**——所以配一个 student 角色是惯例。
+- `priority` 官方用 10 / 7 / 5 / 4（teacher 最高）。
+- `persona` 是完整段落（性格 + 讲课习惯 + 学员常见误区），不是一句话。
+- `voiceDesign` 的 texture / delivery / identity 官方用**英文**描述。
+
 ### 智能体的 TTS 音色字段
 
 `agents[]` 条目可选 `voiceConfig` 与 `voiceDesign`（官方 CPR 课件在用）：

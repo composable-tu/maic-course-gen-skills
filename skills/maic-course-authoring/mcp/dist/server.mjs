@@ -906,6 +906,52 @@ function normalizeScene(scene) {
 */
 /** 本 MCP 编写时对齐的上游契约版本。与 `DSL_VERSION` 不一致时告警。 */
 const CONTRACT_BASELINE = "0.3.0";
+/**
+* 应用内置头像清单（OpenMAIC 仓库 `public/avatars/`，同步 commit 3edaa499，32 个）。
+*
+* 课件里 `agents[].avatar` 写**应用相对路径**（如 `/avatars/teacher.png`），
+* 导入时**原样透传、不拷贝字节**，渲染时才由应用按路径解析——路径写错不会报错，
+* 只会静默显示为空头像。这类"字段合法但资源不存在"的问题只能靠这份清单兜住。
+*
+* 这是快照不是契约：部署方增删头像后此表会过期，所以校验只发**警告**，
+* 并提示以实际部署的 `public/avatars/` 为准。也可以用 `http(s)` / `data` 地址。
+*/
+const APP_AVATARS = [
+	"assist-2.png",
+	"assist.png",
+	"assistant.svg",
+	"builder.svg",
+	"clown-2.png",
+	"clown.png",
+	"clown.svg",
+	"coder.svg",
+	"creative.svg",
+	"curious-2.png",
+	"curious.png",
+	"curious.svg",
+	"dreamer.svg",
+	"explorer.svg",
+	"instructor.png",
+	"learner.svg",
+	"note-taker-2.png",
+	"note-taker.png",
+	"reader.svg",
+	"scholar.svg",
+	"student1.svg",
+	"student2.svg",
+	"student3.svg",
+	"teacher-2.png",
+	"teacher.png",
+	"teacher.svg",
+	"thinker-2.png",
+	"thinker.png",
+	"thinker.svg",
+	"user.png",
+	"user.svg",
+	"notes.svg"
+];
+/** 导入侧的 discussion 兜底规则：优先指向 role 为 student 的智能体，其次是非 teacher。 */
+const DISCUSSION_AGENT_FALLBACK = "先找 role 为 \"student\" 的智能体，其次取第一个非 \"teacher\" 的智能体。";
 /** 画布常量（来自 slide-craft：1000 × 562.5，四周 50px 边距）。 */
 const CANVAS = {
 	viewportSize: 1e3,
@@ -12164,10 +12210,33 @@ function validateReferences(manifest) {
 			});
 		}
 	});
+	checkAgentAvatars(manifest, warnings);
 	return {
 		errors,
 		warnings
 	};
+}
+/**
+* `agents[].avatar` 写的是**应用相对路径**（如 `/avatars/teacher.png`），导入时
+* 原样透传、不拷贝字节，渲染时才由应用解析——路径写错不会有任何报错，
+* 只会静默显示为空头像。实战中真实发生过（示例初版写了不存在的 `teacher-1`）。
+*
+* 内置路径按已知清单核对（快照，可能过期，所以只发警告）；
+* `http(s)` / `data` 地址放行；留空也放行（应用有缺省头像）。
+*/
+function checkAgentAvatars(manifest, warnings) {
+	(Array.isArray(manifest.agents) ? manifest.agents : []).forEach((agent, i) => {
+		if (!isObj(agent)) return;
+		const avatar = typeof agent.avatar === "string" ? agent.avatar.trim() : "";
+		const p = `/agents/${i}/avatar`;
+		if (avatar === "" || /^(https?:|data:|blob:)/.test(avatar)) return;
+		const fileName = avatar.startsWith("/avatars/") ? avatar.slice(9) : avatar;
+		if (avatar.startsWith("/avatars/") && APP_AVATARS.includes(fileName)) return;
+		warnings.push({
+			path: p,
+			message: `头像 "${avatar}" 不是已知的应用内置头像（/avatars/<文件名>，清单见 dsl_schema_get 的 appAvatars），也不是 http(s)/data 地址。导入时原样透传、不校验，路径无效会静默显示为空头像。内置头像共 ${APP_AVATARS.length} 个（以实际部署的 public/avatars/ 为准）。`
+		});
+	});
 }
 /**
 * 归一化整个 manifest。
@@ -12323,6 +12392,16 @@ function dslSchemaGet() {
 		manifestOnlyActionFields: ["audioRef", "agentIndex"],
 		manifestOnlyNote: "audioRef / agentIndex 是 ZIP 层的字段，DSL 的 Action 不认识它们。audioRef 必须指向 ZIP 内路径，其存在性由 course_pack_maic_zip 与 draft_validate 的媒体检查负责。",
 		mediaIndexTypes: MEDIA_INDEX_TYPES,
+		appAvatars: {
+			note: "agents[].avatar 写应用相对路径 /avatars/<文件名>，导入时原样透传、不拷贝字节；路径无效不会报错，只会静默显示为空头像。也可用 http(s)/data 地址。清单是快照，以实际部署的 OpenMAIC public/avatars/ 为准。",
+			known: APP_AVATARS
+		},
+		agentConventions: {
+			roles: "官方课件用 teacher / assistant / student；导入时 discussion 兜底" + DISCUSSION_AGENT_FALLBACK,
+			priority: "官方 CPR 课件用 10 / 7 / 5 / 4（teacher 最高），数值越大越靠前",
+			optional: "agents 数组整体可省略（官方 Python 课件就没有）；但用 discussion 就需要",
+			voice: "可选 voiceConfig（{voiceId, providerId}）与 voiceDesign（texture/delivery/identity，官方用英文描述）"
+		},
 		zip: {
 			manifestAtRoot: "manifest.json",
 			audioDir: "audio/",
